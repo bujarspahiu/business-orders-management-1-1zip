@@ -24,12 +24,37 @@ This guide explains how to build the Android and iOS apps for publishing to Goog
 
 ---
 
-## Step 2: Build for Android (Google Play Console)
+## Step 2: Prepare the Build
+
+Before building on your computer, run these commands in the project folder:
+
+```bash
+npm install
+npm run build
+npx cap sync
+```
+
+This ensures the latest web assets are copied to the native projects.
+
+---
+
+## Step 3: Build for Android (Google Play Console)
 
 ### Open in Android Studio:
 1. Open Android Studio
 2. Select "Open" and navigate to the `android` folder inside your extracted project
 3. Wait for Gradle sync to complete (may take a few minutes)
+
+### Set Version Numbers:
+Before building for release, update the version in `android/app/build.gradle`:
+```gradle
+android {
+    defaultConfig {
+        versionCode 1        // Increment for each release (integer)
+        versionName "1.0.0"  // Display version (string)
+    }
+}
+```
 
 ### Generate Signed APK/AAB:
 1. Go to **Build > Generate Signed Bundle / APK**
@@ -51,7 +76,7 @@ This guide explains how to build the Android and iOS apps for publishing to Goog
 
 ---
 
-## Step 3: Build for iOS (Apple App Store)
+## Step 4: Build for iOS (Apple App Store)
 
 ### Install Dependencies:
 ```bash
@@ -62,6 +87,13 @@ pod install
 ### Open in Xcode:
 1. Open `ios/App/App.xcworkspace` in Xcode (NOT the .xcodeproj file)
 2. Wait for indexing to complete
+
+### Set Version Numbers:
+1. Select the **App** target in Xcode
+2. Go to the **General** tab
+3. Update:
+   - **Version**: Display version (e.g., "1.0.0")
+   - **Build**: Build number, increment for each upload (e.g., "1", "2", "3")
 
 ### Configure Signing:
 1. Select the **App** project in the navigator
