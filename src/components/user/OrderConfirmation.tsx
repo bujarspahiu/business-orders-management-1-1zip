@@ -3,8 +3,9 @@ import { CheckCircle, FileText, Mail, ArrowRight, Download, Loader2 } from 'luci
 import Modal from '@/components/ui/Modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { generatePDFFromOrder } from '@/lib/generatePDF';
+import { Order } from '@/types';
 
 interface OrderConfirmationProps {
   isOpen: boolean;
@@ -22,17 +23,13 @@ const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ isOpen, onClose, 
     
     setIsDownloading(true);
     try {
-      // Fetch the order with items
-      const { data: order, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          items:order_items(*)
-        `)
-        .eq('order_number', orderNumber)
-        .single();
+      // Fetch all orders and find the one with matching order number
+      const { data: orders, error } = await db.getOrders(user.id);
 
-      if (error) throw error;
+      if (error) throw new Error(error);
+      
+      const order = (orders as Order[])?.find(o => o.order_number === orderNumber);
+      if (!order) throw new Error('Order not found');
 
       // Generate and download PDF
       await generatePDFFromOrder(order, user);

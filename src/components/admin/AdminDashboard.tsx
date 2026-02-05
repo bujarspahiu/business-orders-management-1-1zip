@@ -13,7 +13,7 @@ import {
   Menu,
   X
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import UserManagement from './UserManagement';
@@ -55,39 +55,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
   const fetchStats = async () => {
     try {
-      // Fetch users count
-      const { count: usersCount } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'user');
+      // Fetch users
+      const { data: usersData } = await db.getUsers();
+      const users = (usersData as any[]) || [];
+      const usersCount = users.filter(u => u.role === 'user').length;
 
-      // Fetch products count
-      const { count: productsCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch low stock products
-      const { count: lowStockCount } = await supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .lt('stock_quantity', 20);
+      // Fetch products
+      const { data: productsData } = await db.getProducts();
+      const products = (productsData as any[]) || [];
+      const productsCount = products.length;
+      const lowStockCount = products.filter(p => p.stock_quantity < 20).length;
 
       // Fetch orders
-      const { data: ordersData } = await supabase
-        .from('orders')
-        .select('total_amount, status');
+      const { data: ordersData } = await db.getOrders();
+      const orders = (ordersData as any[]) || [];
 
-      const totalOrders = ordersData?.length || 0;
-      const totalRevenue = ordersData?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
-      const pendingOrders = ordersData?.filter(o => o.status === 'pending').length || 0;
+      const totalOrders = orders.length;
+      const totalRevenue = orders.reduce((sum: number, o: any) => sum + (Number(o.total_amount) || 0), 0);
+      const pendingOrders = orders.filter((o: any) => o.status === 'pending').length;
 
       setStats({
-        totalUsers: usersCount || 0,
-        totalProducts: productsCount || 0,
+        totalUsers: usersCount,
+        totalProducts: productsCount,
         totalOrders,
         totalRevenue,
         pendingOrders,
-        lowStockProducts: lowStockCount || 0,
+        lowStockProducts: lowStockCount,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);

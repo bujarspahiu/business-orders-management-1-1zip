@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, ShoppingCart, Plus, Minus, Snowflake, Sun, Cloud, Check } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { Product } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -28,14 +28,10 @@ const ProductGrid: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_active', true)
-        .order('name');
+      const { data, error } = await db.getProducts(true);
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (error) throw new Error(error);
+      setProducts((data as Product[]) || []);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {

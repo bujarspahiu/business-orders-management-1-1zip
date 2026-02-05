@@ -12,7 +12,7 @@ import {
   ArrowRight,
   AlertTriangle
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { ProductForm } from '@/types';
 
 interface ParsedProduct {
@@ -242,19 +242,19 @@ const BulkProductImport: React.FC<BulkProductImportProps> = ({ onImportComplete,
     setIsProcessing(true);
     const result: ImportResult = { success: 0, failed: 0, errors: [] };
 
-    for (const product of validProducts) {
-      try {
-        const { error } = await supabase.from('products').insert(product.data);
-        if (error) {
-          result.failed++;
-          result.errors.push({ row: product.row, error: error.message });
-        } else {
-          result.success++;
-        }
-      } catch (error: any) {
-        result.failed++;
-        result.errors.push({ row: product.row, error: error.message || 'Unknown error' });
+    try {
+      const products = validProducts.map(p => p.data);
+      const { data, error } = await db.createProductsBulk(products);
+      
+      if (error) {
+        result.failed = validProducts.length;
+        result.errors.push({ row: 0, error });
+      } else {
+        result.success = validProducts.length;
       }
+    } catch (error: any) {
+      result.failed = validProducts.length;
+      result.errors.push({ row: 0, error: error.message || 'Unknown error' });
     }
 
     // Count invalid products as failed

@@ -7,7 +7,7 @@ import {
   Bell,
   CheckCircle
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { NotificationRecipient } from '@/types';
 import Modal from '@/components/ui/Modal';
 
@@ -28,13 +28,10 @@ const NotificationSettings: React.FC = () => {
 
   const fetchRecipients = async () => {
     try {
-      const { data, error } = await supabase
-        .from('notification_recipients')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.getNotificationRecipients();
 
-      if (error) throw error;
-      setRecipients(data || []);
+      if (error) throw new Error(error);
+      setRecipients((data as NotificationRecipient[]) || []);
     } catch (error) {
       console.error('Error fetching recipients:', error);
     } finally {
@@ -46,14 +43,14 @@ const NotificationSettings: React.FC = () => {
     if (!formData.email) return;
     setIsSaving(true);
     try {
-      const { error } = await supabase.from('notification_recipients').insert({
+      const { error } = await db.createNotificationRecipient({
         email: formData.email,
         name: formData.name || null,
         role: formData.role,
         is_active: true,
       });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setModalOpen(false);
       setFormData({ email: '', name: '', role: 'admin' });
       fetchRecipients();
@@ -67,12 +64,9 @@ const NotificationSettings: React.FC = () => {
 
   const handleToggleActive = async (recipient: NotificationRecipient) => {
     try {
-      const { error } = await supabase
-        .from('notification_recipients')
-        .update({ is_active: !recipient.is_active })
-        .eq('id', recipient.id);
+      const { error } = await db.updateNotificationRecipient(recipient.id, { is_active: !recipient.is_active });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       fetchRecipients();
     } catch (error) {
       console.error('Error toggling recipient:', error);
@@ -82,12 +76,9 @@ const NotificationSettings: React.FC = () => {
   const handleDeleteRecipient = async (id: string) => {
     if (!confirm('Are you sure you want to remove this recipient?')) return;
     try {
-      const { error } = await supabase
-        .from('notification_recipients')
-        .delete()
-        .eq('id', id);
+      const { error } = await db.deleteNotificationRecipient(id);
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       fetchRecipients();
     } catch (error) {
       console.error('Error deleting recipient:', error);

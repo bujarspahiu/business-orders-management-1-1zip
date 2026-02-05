@@ -3,7 +3,8 @@ import { FileText, Loader2, AlertCircle } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
+import { Product } from '@/types';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -28,21 +29,22 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, onSucces
   };
 
   const validateStock = async (): Promise<{ valid: boolean; message?: string }> => {
+    const { data: products, error } = await db.getProducts();
+    if (error || !products) {
+      return { valid: false, message: 'Could not validate stock' };
+    }
+    
     for (const item of cart) {
-      const { data, error } = await supabase
-        .from('products')
-        .select('stock_quantity')
-        .eq('id', item.product.id)
-        .single();
-
-      if (error || !data) {
+      const product = (products as Product[]).find(p => p.id === item.product.id);
+      
+      if (!product) {
         return { valid: false, message: `${t.checkoutModal.stockError} ${item.product.name}` };
       }
 
-      if (data.stock_quantity < item.quantity) {
+      if (product.stock_quantity < item.quantity) {
         return {
           valid: false,
-          message: `${t.checkoutModal.insufficientStock} ${item.product.name}. ${t.checkoutModal.available}: ${data.stock_quantity}`,
+          message: `${t.checkoutModal.insufficientStock} ${item.product.name}. ${t.checkoutModal.available}: ${product.stock_quantity}`,
         };
       }
     }
@@ -68,24 +70,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, onSucces
       const orderNumber = generateOrderNumber();
       const totalAmount = getCartTotal();
 
-      // Create order
-      const { data: orderData, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          order_number: orderNumber,
-          user_id: user.id,
-          status: 'pending',
-          total_amount: totalAmount,
-          notes: notes || null,
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
-      // Create order items
+      // Create order with items
       const orderItems = cart.map((item) => ({
-        order_id: orderData.id,
         product_id: item.product.id,
         product_code: item.product.product_code,
         product_name: item.product.name,
@@ -94,39 +80,16 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ isOpen, onClose, onSucces
         total_price: item.product.price * item.quantity,
       }));
 
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .insert(orderItems);
-
-      if (itemsError) throw itemsError;
-
-      // Update stock quantities
-      for (const item of cart) {
-        const newStock = item.product.stock_quantity - item.quantity;
-        await supabase
-          .from('products')
-          .update({ stock_quantity: newStock, updated_at: new Date().toISOString() })
-          .eq('id', item.product.id);
-      }
-
-      // Log activity
-      await supabase.from('activity_logs').insert({
+      const { data: orderData, error: orderError } = await db.createOrder({
+        order_number: orderNumber,
         user_id: user.id,
-        action: 'order_placed',
-        details: { order_number: orderNumber, total: totalAmount, items: cart.length },
+        status: 'pending',
+        total_amount: totalAmount,
+        notes: notes || null,
+        items: orderItems,
       });
 
-      // Send notification (async, don't wait)
-      supabase.functions.invoke('send-order-notification', {
-        body: {
-          orderNumber,
-          orderId: orderData.id,
-          userEmail: user.email,
-          businessName: user.business_name,
-          totalAmount,
-          items: orderItems,
-        },
-      }).catch(console.error);
+      if (orderError) throw new Error(orderError);
 
       // Clear cart and close modal
       clearCart();

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Building2, Phone, Mail, User, Save, Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 const UserProfile: React.FC = () => {
   const { user } = useAuth();
@@ -28,20 +28,16 @@ const UserProfile: React.FC = () => {
     setIsSaving(true);
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          business_name: formData.business_name,
-          business_number: formData.business_number,
-          phone: formData.phone,
-          whatsapp: formData.whatsapp,
-          viber: formData.viber,
-          contact_person: formData.contact_person,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+      const { error } = await db.updateUser(user.id, {
+        business_name: formData.business_name,
+        business_number: formData.business_number,
+        phone: formData.phone,
+        whatsapp: formData.whatsapp,
+        viber: formData.viber,
+        contact_person: formData.contact_person,
+      });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       setSaved(true);
       setIsEditing(false);

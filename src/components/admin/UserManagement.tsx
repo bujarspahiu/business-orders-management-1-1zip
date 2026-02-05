@@ -12,7 +12,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { User, UserForm } from '@/types';
 import Modal from '@/components/ui/Modal';
 
@@ -52,13 +52,10 @@ const UserManagement: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.getUsers();
 
-      if (error) throw error;
-      setUsers(data || []);
+      if (error) throw new Error(error);
+      setUsers((data as User[]) || []);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
@@ -119,33 +116,8 @@ const UserManagement: React.FC = () => {
     try {
       if (editingUser) {
         // Update existing user
-        const { error } = await supabase
-          .from('users')
-          .update({
-            email: formData.email,
-            role: formData.role,
-            business_name: formData.business_name,
-            business_number: formData.business_number,
-            phone: formData.phone,
-            whatsapp: formData.whatsapp,
-            viber: formData.viber,
-            contact_person: formData.contact_person,
-            is_active: formData.is_active,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingUser.id);
-
-        if (error) throw error;
-      } else {
-        // Create new user
-        if (!formData.password) {
-          alert('Password is required for new users');
-          setIsSaving(false);
-          return;
-        }
-        const { error } = await supabase.from('users').insert({
+        const { error } = await db.updateUser(editingUser.id, {
           email: formData.email,
-          password_hash: formData.password,
           role: formData.role,
           business_name: formData.business_name,
           business_number: formData.business_number,
@@ -156,7 +128,28 @@ const UserManagement: React.FC = () => {
           is_active: formData.is_active,
         });
 
-        if (error) throw error;
+        if (error) throw new Error(error);
+      } else {
+        // Create new user
+        if (!formData.password) {
+          alert('Password is required for new users');
+          setIsSaving(false);
+          return;
+        }
+        const { error } = await db.createUser({
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          business_name: formData.business_name,
+          business_number: formData.business_number,
+          phone: formData.phone,
+          whatsapp: formData.whatsapp,
+          viber: formData.viber,
+          contact_person: formData.contact_person,
+          is_active: formData.is_active,
+        });
+
+        if (error) throw new Error(error);
       }
 
       setModalOpen(false);
@@ -171,12 +164,9 @@ const UserManagement: React.FC = () => {
 
   const handleToggleStatus = async (user: User) => {
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ is_active: !user.is_active, updated_at: new Date().toISOString() })
-        .eq('id', user.id);
+      const { error } = await db.updateUser(user.id, { is_active: !user.is_active });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       fetchUsers();
     } catch (error) {
       console.error('Error toggling user status:', error);
@@ -186,8 +176,8 @@ const UserManagement: React.FC = () => {
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
     try {
-      const { error } = await supabase.from('users').delete().eq('id', userId);
-      if (error) throw error;
+      const { error } = await db.deleteUser(userId);
+      if (error) throw new Error(error);
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -198,12 +188,9 @@ const UserManagement: React.FC = () => {
     if (!selectedUserId || !newPassword) return;
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ password_hash: newPassword, updated_at: new Date().toISOString() })
-        .eq('id', selectedUserId);
+      const { error } = await db.updateUser(selectedUserId, { password: newPassword });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       setResetPasswordModal(false);
       setNewPassword('');
       setSelectedUserId(null);

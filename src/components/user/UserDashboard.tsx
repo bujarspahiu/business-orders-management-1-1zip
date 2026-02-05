@@ -14,7 +14,7 @@ import {
   Download,
   Loader2
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Order } from '@/types';
@@ -51,17 +51,10 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
     if (!user) return;
     setIsLoadingOrders(true);
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          items:order_items(*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.getOrders(user.id);
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (error) throw new Error(error);
+      setOrders((data as Order[]) || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {

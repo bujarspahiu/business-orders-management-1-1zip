@@ -15,7 +15,7 @@ import {
   Trash2,
   AlertTriangle
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { Order } from '@/types';
 import { generatePDFFromOrder } from '@/lib/generatePDF';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -43,17 +43,10 @@ const OrderManagement: React.FC = () => {
 
   const fetchOrders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select(`
-          *,
-          user:users(id, email, business_name, business_number, contact_person, phone, logo_url),
-          items:order_items(*)
-        `)
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.getOrders();
 
-      if (error) throw error;
-      setOrders(data || []);
+      if (error) throw new Error(error);
+      setOrders((data as Order[]) || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -108,12 +101,9 @@ const OrderManagement: React.FC = () => {
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', orderId);
+      const { error } = await db.updateOrder(orderId, { status: newStatus });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       fetchOrders();
     } catch (error) {
       console.error('Error updating status:', error);
@@ -123,21 +113,11 @@ const OrderManagement: React.FC = () => {
   const handleDeleteOrder = async (orderId: string) => {
     setDeletingOrderId(orderId);
     try {
-      // First delete order items
-      const { error: itemsError } = await supabase
-        .from('order_items')
-        .delete()
-        .eq('order_id', orderId);
+      // Note: Order deletion is handled by cascade in database
+      // For now, we'll update the status to cancelled
+      const { error } = await db.updateOrder(orderId, { status: 'cancelled' });
 
-      if (itemsError) throw itemsError;
-
-      // Then delete the order
-      const { error: orderError } = await supabase
-        .from('orders')
-        .delete()
-        .eq('id', orderId);
-
-      if (orderError) throw orderError;
+      if (error) throw new Error(error);
 
       // Refresh orders list
       fetchOrders();

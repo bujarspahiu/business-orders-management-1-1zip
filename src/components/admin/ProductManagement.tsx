@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   Upload
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 import { Product, ProductForm } from '@/types';
 import Modal from '@/components/ui/Modal';
 import BulkProductImport from '@/components/admin/BulkProductImport';
@@ -51,13 +51,10 @@ const ProductManagement: React.FC = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await db.getProducts();
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (error) throw new Error(error);
+      setProducts((data as Product[]) || []);
     } catch (error) {
       console.error('Gabim gjatë marrjes së produkteve:', error);
     } finally {
@@ -126,18 +123,12 @@ const ProductManagement: React.FC = () => {
     setIsSaving(true);
     try {
       if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update({
-            ...formData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', editingProduct.id);
+        const { error } = await db.updateProduct(editingProduct.id, formData);
 
-        if (error) throw error;
+        if (error) throw new Error(error);
       } else {
-        const { error } = await supabase.from('products').insert(formData);
-        if (error) throw error;
+        const { error } = await db.createProduct(formData);
+        if (error) throw new Error(error);
       }
 
       setModalOpen(false);
@@ -153,8 +144,8 @@ const ProductManagement: React.FC = () => {
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Jeni të sigurt që dëshironi të fshini këtë produkt?')) return;
     try {
-      const { error } = await supabase.from('products').delete().eq('id', productId);
-      if (error) throw error;
+      const { error } = await db.deleteProduct(productId);
+      if (error) throw new Error(error);
       fetchProducts();
     } catch (error) {
       console.error('Gabim gjatë fshirjes së produktit:', error);
@@ -163,12 +154,9 @@ const ProductManagement: React.FC = () => {
 
   const handleToggleActive = async (product: Product) => {
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_active: !product.is_active, updated_at: new Date().toISOString() })
-        .eq('id', product.id);
+      const { error } = await db.updateProduct(product.id, { is_active: !product.is_active });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
       fetchProducts();
     } catch (error) {
       console.error('Gabim gjatë ndryshimit të statusit:', error);
