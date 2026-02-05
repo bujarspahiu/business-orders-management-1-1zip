@@ -1,8 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -313,14 +317,17 @@ app.delete('/api/notification_recipients/:id', async (req, res) => {
 
 // Serve frontend for all non-API routes in production
 if (process.env.NODE_ENV === 'production' || !process.env.NODE_ENV) {
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api') && req.method === 'GET') {
       res.sendFile(path.join(__dirname, '../dist/index.html'));
+    } else {
+      next();
     }
   });
 }
 
-const PORT = parseInt(process.env.PORT || '5000', 10);
+const isDev = process.env.NODE_ENV === 'development';
+const PORT = parseInt(process.env.PORT || (isDev ? '3001' : '5000'), 10);
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
