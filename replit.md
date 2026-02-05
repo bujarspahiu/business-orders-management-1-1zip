@@ -72,3 +72,10 @@ Preferred communication style: Simple, everyday language.
 - **TypeScript**: Type safety across the codebase
 - **ESLint**: Code linting with React hooks and refresh plugins
 - **PostCSS + Autoprefixer**: CSS processing
+
+### Mobile App (Capacitor)
+- **Capacitor v6**: Wraps the web app for native Android and iOS builds
+- **App ID**: `com.lassatyres.app`
+- **App Name**: Lassa Tyres
+- **Build Instructions**: See `MOBILE_BUILD_INSTRUCTIONS.md` for publishing to Google Play and App Store
+- **Native Projects**: `android/` and `ios/` folders contain the native platform code
