@@ -132,9 +132,31 @@ The workflow runs both servers:
 
 Vite proxies `/api` requests to the backend server.
 
+## Running the Mobile App
+
+The mobile app is built with Capacitor v6, which wraps the web app as native Android/iOS apps.
+
+### Key Files
+- `capacitor.config.ts` - Capacitor configuration
+- `scripts/prepare-mobile.sh` - Automated build preparation script
+- `MOBILE_BUILD_INSTRUCTIONS.md` - Detailed step-by-step build/publish guide
+- `android/` - Android native project (open in Android Studio)
+- `ios/` - iOS native project (open in Xcode)
+
+### API URL for Mobile
+- The mobile app loads web assets locally and needs a published server URL for API calls
+- The `window.__LASSA_API_URL__` variable in `index.html` is used by `src/lib/db.ts`
+- When building for mobile, set this to the published Replit URL via `prepare-mobile.sh`
+
+### Workflow
+- "Start application" runs both backend (port 3001) and frontend (port 5000)
+
 ## Recent Changes
 
 - Migrated from external Supabase to Replit's internal PostgreSQL database
 - Added Express.js backend server for API operations
 - Created custom database client (`src/lib/db.ts`) to replace Supabase client
 - Added Capacitor v6 for native mobile app builds
+- Updated MOBILE_BUILD_INSTRUCTIONS.md with comprehensive step-by-step guide
+- Created automated `scripts/prepare-mobile.sh` for mobile build preparation
+- Web assets synced to both Android and iOS native projects

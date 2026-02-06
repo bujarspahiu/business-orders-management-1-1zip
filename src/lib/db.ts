@@ -1,4 +1,15 @@
-const API_BASE = '/api';
+const isNativeApp = typeof (window as any)?.Capacitor !== 'undefined' && (window as any)?.Capacitor?.isNativePlatform?.();
+
+const PRODUCTION_URL = ((window as any).__LASSA_API_URL__ || '').replace(/\/+$/, '');
+
+if (isNativeApp && !PRODUCTION_URL) {
+  console.error(
+    'Lassa Tyres: Server URL is not configured. ' +
+    'Please rebuild the app using the prepare-mobile.sh script with your published server URL.'
+  );
+}
+
+const API_BASE = isNativeApp && PRODUCTION_URL ? `${PRODUCTION_URL}/api` : '/api';
 
 interface QueryResult<T> {
   data: T | null;

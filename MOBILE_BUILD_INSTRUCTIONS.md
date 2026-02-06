@@ -1,180 +1,238 @@
 # Mobile App Build Instructions
 
-This guide explains how to build the Android and iOS apps for publishing to Google Play Console and Apple App Store.
+This guide explains how to build the Lassa Tyres Android and iOS apps and publish them to Google Play and Apple App Store.
 
-## Prerequisites
+---
+
+## What You Need
 
 ### For Android:
-- [Android Studio](https://developer.android.com/studio) installed on your computer
+- A Windows, Mac, or Linux computer
+- [Android Studio](https://developer.android.com/studio) (free download)
 - Java Development Kit (JDK) 17 or higher
-- Google Play Developer Account ($25 one-time fee)
+- Google Play Developer Account ($25 one-time fee) - only if publishing to the store
 
 ### For iOS:
-- Mac computer with [Xcode](https://developer.apple.com/xcode/) installed
-- Apple Developer Account ($99/year)
-- CocoaPods installed (`sudo gem install cocoapods`)
+- A Mac computer (required - Apple only allows iOS builds on Mac)
+- [Xcode](https://developer.apple.com/xcode/) (free from the Mac App Store)
+- Apple Developer Account ($99/year) - only if publishing to the store
 
 ---
 
 ## Step 1: Download the Project
 
-1. In Replit, click the three dots menu (⋮) in the Files panel
-2. Select "Download as zip"
+1. In Replit, click the three dots menu (three dots) in the Files panel
+2. Select **"Download as zip"**
 3. Extract the zip file on your computer
+4. Open a terminal/command prompt and navigate to the extracted folder
 
 ---
 
-## Step 2: Prepare the Build
+## Step 2: Find Your Published App URL
 
-Before building on your computer, run these commands in the project folder:
+Before building the mobile apps, you need your published website URL:
+
+1. In Replit, open the **Publishing** tool
+2. Copy your published URL (it looks like `https://your-app-name.replit.app`)
+3. You will need this URL in the next step
+
+---
+
+## Step 3: Prepare the Mobile Build
+
+Open a terminal in your extracted project folder and run:
 
 ```bash
+# Install dependencies
 npm install
+
+# Build the web app
 npm run build
+
+# IMPORTANT: Set your published server URL so the mobile app can connect to it
+# Replace YOUR_URL_HERE with your actual published URL from Step 2
+
+# On Mac/Linux:
+sed -i '' "s|window.__LASSA_API_URL__ = ''|window.__LASSA_API_URL__ = 'YOUR_URL_HERE'|g" dist/index.html
+
+# On Windows (PowerShell):
+(Get-Content dist/index.html) -replace "window.__LASSA_API_URL__ = ''", "window.__LASSA_API_URL__ = 'YOUR_URL_HERE'" | Set-Content dist/index.html
+
+# Sync the web build to native projects
 npx cap sync
 ```
 
-This ensures the latest web assets are copied to the native projects.
+**Or use the helper script (Mac/Linux only):**
+```bash
+./scripts/prepare-mobile.sh https://your-published-url.replit.app
+```
 
 ---
 
-## Step 3: Build for Android (Google Play Console)
+## Step 4: Build for Android
 
 ### Open in Android Studio:
 1. Open Android Studio
-2. Select "Open" and navigate to the `android` folder inside your extracted project
-3. Wait for Gradle sync to complete (may take a few minutes)
+2. Click **"Open"** and navigate to the `android` folder inside your project
+3. Wait for Gradle sync to complete (this may take a few minutes the first time)
 
-### Set Version Numbers:
-Before building for release, update the version in `android/app/build.gradle`:
-```gradle
-android {
-    defaultConfig {
-        versionCode 1        // Increment for each release (integer)
-        versionName "1.0.0"  // Display version (string)
-    }
-}
-```
+### Test on Your Phone:
+1. Connect your Android phone via USB cable
+2. Enable "Developer options" and "USB debugging" on your phone
+3. Select your phone from the device dropdown in Android Studio
+4. Click the green **Play** button to run the app
 
-### Generate Signed APK/AAB:
-1. Go to **Build > Generate Signed Bundle / APK**
-2. Select **Android App Bundle (AAB)** for Google Play (recommended)
-3. Create a new keystore or use existing:
-   - Click "Create new..."
-   - Choose a location and filename (keep this file safe!)
-   - Set passwords and fill in certificate info
-4. Select **release** build variant
-5. Click **Finish**
+### Test on Emulator:
+1. In Android Studio, go to **Tools > Device Manager**
+2. Click **"Create Device"** and choose a phone model
+3. Download a system image and create the emulator
+4. Select the emulator and click the green **Play** button
 
-### Upload to Google Play Console:
+### Build for Google Play Store:
+1. In Android Studio, update the version in `android/app/build.gradle`:
+   ```gradle
+   android {
+       defaultConfig {
+           versionCode 1        // Increment this number for each new release
+           versionName "1.0.0"  // Display version shown to users
+       }
+   }
+   ```
+2. Go to **Build > Generate Signed Bundle / APK**
+3. Select **Android App Bundle (AAB)**
+4. Create a new keystore (save this file safely - you need it for every update!)
+5. Select **release** build type
+6. Click **Finish** - your AAB file will be in `android/app/release/`
+
+### Upload to Google Play:
 1. Go to [Google Play Console](https://play.google.com/console)
 2. Create a new app
 3. Go to **Production > Create new release**
 4. Upload your `.aab` file
-5. Complete all required sections (store listing, content rating, etc.)
+5. Fill in the store listing (description, screenshots, etc.)
 6. Submit for review
 
 ---
 
-## Step 4: Build for iOS (Apple App Store)
+## Step 5: Build for iOS
 
-### Install Dependencies:
+### Install CocoaPods:
 ```bash
+sudo gem install cocoapods
 cd ios/App
 pod install
+cd ../..
 ```
 
 ### Open in Xcode:
-1. Open `ios/App/App.xcworkspace` in Xcode (NOT the .xcodeproj file)
+1. Open **`ios/App/App.xcworkspace`** in Xcode (NOT the .xcodeproj file)
 2. Wait for indexing to complete
 
-### Set Version Numbers:
-1. Select the **App** target in Xcode
-2. Go to the **General** tab
-3. Update:
-   - **Version**: Display version (e.g., "1.0.0")
-   - **Build**: Build number, increment for each upload (e.g., "1", "2", "3")
+### Test on Simulator:
+1. Select an iPhone model from the top device bar
+2. Click the **Play** button to run in the simulator
 
-### Configure Signing:
-1. Select the **App** project in the navigator
-2. Go to **Signing & Capabilities** tab
-3. Select your Team (Apple Developer account)
-4. Xcode will automatically manage signing
+### Test on Your iPhone:
+1. Connect your iPhone via USB
+2. Select your phone from the device dropdown
+3. You may need to trust the developer certificate on your phone (Settings > General > Device Management)
+4. Click **Play** to run on your phone
 
-### Build Archive:
-1. Select **Any iOS Device** as the build target
-2. Go to **Product > Archive**
-3. Wait for the build to complete
+### Build for App Store:
+1. Select the **App** target in the left panel
+2. Go to **General** tab and set:
+   - **Version**: 1.0.0 (display version)
+   - **Build**: 1 (increment for each upload)
+3. Go to **Signing & Capabilities** tab
+4. Select your Apple Developer team
+5. Select **Any iOS Device** as the build target
+6. Go to **Product > Archive**
+7. When the archive completes, click **Distribute App**
+8. Select **App Store Connect** and follow the prompts
 
-### Upload to App Store Connect:
-1. In the Organizer window, select your archive
-2. Click **Distribute App**
-3. Select **App Store Connect**
-4. Follow the prompts to upload
-5. Go to [App Store Connect](https://appstoreconnect.apple.com)
-6. Complete app information and submit for review
+### Submit to App Store:
+1. Go to [App Store Connect](https://appstoreconnect.apple.com)
+2. Create a new app
+3. Fill in app information, screenshots, and description
+4. Select the build you uploaded
+5. Submit for review
 
 ---
 
-## App Configuration
+## App Details
 
-### App Details (in capacitor.config.ts):
 - **App ID**: `com.lassatyres.app`
 - **App Name**: Lassa Tyres
+- **Server**: Your published Replit URL
 
-### To Change App ID:
-If you need a different app ID for the stores, update:
-1. `capacitor.config.ts` - change `appId`
-2. Run `npx cap sync` to apply changes
+### To Change the App ID:
+If Google Play or Apple requires a different ID:
+1. Update `appId` in `capacitor.config.ts`
+2. Run `npx cap sync` again
 
 ---
 
-## Adding App Icons and Splash Screens
+## Adding Your App Icon
 
-### Android Icons:
-Replace files in `android/app/src/main/res/`:
-- `mipmap-mdpi/ic_launcher.png` (48x48)
-- `mipmap-hdpi/ic_launcher.png` (72x72)
-- `mipmap-xhdpi/ic_launcher.png` (96x96)
-- `mipmap-xxhdpi/ic_launcher.png` (144x144)
-- `mipmap-xxxhdpi/ic_launcher.png` (192x192)
+### Android:
+Replace the icon files in `android/app/src/main/res/`:
+- `mipmap-mdpi/ic_launcher.png` (48x48 pixels)
+- `mipmap-hdpi/ic_launcher.png` (72x72 pixels)
+- `mipmap-xhdpi/ic_launcher.png` (96x96 pixels)
+- `mipmap-xxhdpi/ic_launcher.png` (144x144 pixels)
+- `mipmap-xxxhdpi/ic_launcher.png` (192x192 pixels)
 
-### iOS Icons:
+### iOS:
 Replace files in `ios/App/App/Assets.xcassets/AppIcon.appiconset/`
-Use sizes: 20, 29, 40, 58, 60, 76, 80, 87, 120, 152, 167, 180, 1024 pixels
+Use these sizes: 20, 29, 40, 58, 60, 76, 80, 87, 120, 152, 167, 180, 1024 pixels
+
+**Tip:** Use a tool like [appicon.co](https://appicon.co) to automatically generate all icon sizes from one image.
 
 ---
 
-## Updating the App
+## Updating the App After Changes
 
-When you make changes to your web app:
-1. Run `npm run build` in Replit
+When you make changes to your website in Replit:
+
+1. Publish the updated website in Replit
 2. Download the updated project
-3. Run `npx cap sync` on your computer
-4. Rebuild in Android Studio / Xcode
+3. Run the prepare script again:
+   ```bash
+   ./scripts/prepare-mobile.sh https://your-published-url.replit.app
+   ```
+4. Open in Android Studio / Xcode
+5. Increment the version number
+6. Build and upload the new version
 
 ---
 
 ## Troubleshooting
 
+### App Shows Blank Screen:
+- Make sure you set the published URL in Step 3
+- Check that your published website is running
+- Run `npx cap sync` again
+
 ### Android Build Fails:
-- Ensure Gradle sync completed successfully
+- Make sure Gradle sync completed (look for green checkmark)
 - Check that JDK 17+ is installed
-- Try **File > Invalidate Caches and Restart**
+- Try **File > Invalidate Caches and Restart** in Android Studio
 
 ### iOS Build Fails:
-- Run `pod install` again in `ios/App` folder
-- Ensure you're opening `.xcworkspace` not `.xcodeproj`
-- Check signing configuration
+- Make sure you ran `pod install` in the `ios/App` folder
+- Open `.xcworkspace` file, NOT `.xcodeproj`
+- Check that you selected a valid signing team
 
-### App Not Loading Content:
-- Make sure `npm run build` completed successfully before syncing
-- Run `npx cap sync` to update native projects
+### API Calls Not Working:
+- Verify your published URL is correct and the website is live
+- Check that you replaced `YOUR_URL_HERE` with the actual URL
+- Make sure the URL starts with `https://`
 
 ---
 
-## Need Help?
+## Helpful Links
 
 - [Capacitor Documentation](https://capacitorjs.com/docs)
 - [Android Publishing Guide](https://developer.android.com/studio/publish)
 - [iOS Publishing Guide](https://developer.apple.com/ios/submit/)
+- [App Icon Generator](https://appicon.co)
