@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 
-// Landing page components
 import Header from '@/components/landing/Header';
 import Hero from '@/components/landing/Hero';
 import ProductShowcase from '@/components/landing/ProductShowcase';
@@ -9,17 +8,19 @@ import About from '@/components/landing/About';
 import Contact from '@/components/landing/Contact';
 import Footer from '@/components/landing/Footer';
 import LoginModal from '@/components/auth/LoginModal';
+import MobileLoginScreen from '@/components/auth/MobileLoginScreen';
 
-// Dashboard components
 import UserDashboard from '@/components/user/UserDashboard';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import CartDrawer from '@/components/user/CartDrawer';
+
+const isNativeApp = typeof (window as any)?.Capacitor !== 'undefined' && (window as any)?.Capacitor?.isNativePlatform?.();
 
 const AppContent: React.FC = () => {
   const { user, isAuthenticated, logout, getCartCount } = useAuth();
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(isNativeApp);
 
   const handleLoginSuccess = () => {
     setLoginModalOpen(false);
@@ -28,7 +29,7 @@ const AppContent: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    setShowDashboard(false);
+    setShowDashboard(isNativeApp);
   };
 
   const handleDashboardClick = () => {
@@ -42,7 +43,16 @@ const AppContent: React.FC = () => {
     }
   };
 
-  // Show dashboard if authenticated and user wants to see it
+  if (isNativeApp) {
+    if (isAuthenticated) {
+      if (user?.role === 'admin') {
+        return <AdminDashboard onLogout={handleLogout} />;
+      }
+      return <UserDashboard onLogout={handleLogout} />;
+    }
+    return <MobileLoginScreen onSuccess={handleLoginSuccess} />;
+  }
+
   if (isAuthenticated && showDashboard) {
     if (user?.role === 'admin') {
       return <AdminDashboard onLogout={handleLogout} />;
@@ -50,7 +60,6 @@ const AppContent: React.FC = () => {
     return <UserDashboard onLogout={handleLogout} />;
   }
 
-  // Show landing page
   return (
     <div className="min-h-screen bg-white">
       <Header
@@ -75,14 +84,12 @@ const AppContent: React.FC = () => {
 
       <Footer />
 
-      {/* Login Modal */}
       <LoginModal
         isOpen={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
         onSuccess={handleLoginSuccess}
       />
 
-      {/* Cart Drawer for authenticated users on landing page */}
       {isAuthenticated && user?.role === 'user' && (
         <CartDrawer
           isOpen={cartOpen}
