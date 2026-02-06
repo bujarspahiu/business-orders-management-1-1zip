@@ -21,6 +21,25 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+async function ensureAdminExists() {
+  try {
+    const result = await pool.query("SELECT id FROM users WHERE role = 'admin'");
+    if (result.rows.length === 0) {
+      const { v4: uuidv4 } = await import('uuid');
+      const passwordHash = await bcrypt.hash('Admin', 10);
+      await pool.query(
+        `INSERT INTO users (id, email, password_hash, role, is_active) VALUES ($1, 'Admin', $2, 'admin', true)`,
+        [uuidv4(), passwordHash]
+      );
+      console.log('Default admin created (Admin/Admin)');
+    }
+  } catch (error) {
+    console.error('Error ensuring admin exists:', error);
+  }
+}
+
+ensureAdminExists();
+
 // Users endpoints
 app.get('/api/users', async (req, res) => {
   try {

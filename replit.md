@@ -88,8 +88,8 @@ The Express.js backend (`server/index.ts`) provides these endpoints:
 
 ## Default Admin Account
 
-- **Email**: admin@lassa.com
-- **Password**: password
+- **Username**: Admin
+- **Password**: Admin
 
 ## External Dependencies
 
