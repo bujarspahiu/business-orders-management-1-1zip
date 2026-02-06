@@ -112,8 +112,8 @@ interface Translations {
   // LoginModal
   loginModal: {
     title: string;
-    emailAddress: string;
-    emailPlaceholder: string;
+    username: string;
+    usernamePlaceholder: string;
     password: string;
     passwordPlaceholder: string;
     loginButton: string;
@@ -548,8 +548,8 @@ const translations: Record<Language, Translations> = {
     },
     loginModal: {
       title: 'Hyrje Biznesi',
-      emailAddress: 'Adresa Email',
-      emailPlaceholder: 'email@juaj.com',
+      username: 'Emri i Përdoruesit',
+      usernamePlaceholder: 'Shkruani emrin e përdoruesit',
       password: 'Fjalëkalimi',
       passwordPlaceholder: 'Vendosni fjalëkalimin tuaj',
       loginButton: 'Hyni',
@@ -969,8 +969,8 @@ const translations: Record<Language, Translations> = {
     },
     loginModal: {
       title: 'Business Login',
-      emailAddress: 'Email Address',
-      emailPlaceholder: 'your@email.com',
+      username: 'Username',
+      usernamePlaceholder: 'Enter your username',
       password: 'Password',
       passwordPlaceholder: 'Enter your password',
       loginButton: 'Login',

@@ -63,7 +63,7 @@ const OrderManagement: React.FC = () => {
       filtered = filtered.filter(
         (o) =>
           o.order_number.toLowerCase().includes(query) ||
-          (o.user as any)?.email?.toLowerCase().includes(query) ||
+          (o.user as any)?.username?.toLowerCase().includes(query) ||
           (o.user as any)?.business_name?.toLowerCase().includes(query)
       );
     }
@@ -307,7 +307,7 @@ const OrderManagement: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-500">
-                        {(order.user as any)?.business_name || (order.user as any)?.email}
+                        {(order.user as any)?.business_name || (order.user as any)?.username}
                       </p>
                       <p className="text-xs text-gray-400 flex items-center space-x-1 mt-1">
                         <Calendar className="w-3 h-3" />

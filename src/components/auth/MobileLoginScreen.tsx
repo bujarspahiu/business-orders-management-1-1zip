@@ -10,7 +10,7 @@ interface MobileLoginScreenProps {
 const MobileLoginScreen: React.FC<MobileLoginScreenProps> = ({ onSuccess }) => {
   const { login } = useAuth();
   const { t, language, setLanguage } = useLanguage();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -21,11 +21,11 @@ const MobileLoginScreen: React.FC<MobileLoginScreenProps> = ({ onSuccess }) => {
     setError('');
     setIsLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(username, password);
 
     if (result.success) {
       onSuccess();
-      setEmail('');
+      setUsername('');
       setPassword('');
     } else {
       setError(result.error || t.loginModal.loginFailed);
@@ -70,16 +70,16 @@ const MobileLoginScreen: React.FC<MobileLoginScreenProps> = ({ onSuccess }) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                {t.loginModal.emailAddress}
+                {t.loginModal.username}
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
-                autoComplete="email"
+                autoComplete="username"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors text-base"
-                placeholder={t.loginModal.emailPlaceholder}
+                placeholder={t.loginModal.usernamePlaceholder}
               />
             </div>
 

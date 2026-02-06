@@ -1,6 +1,7 @@
 // User types
 export interface User {
   id: string;
+  username: string;
   email: string;
   role: 'admin' | 'user';
   business_name?: string;
@@ -91,7 +92,7 @@ export interface ActivityLog {
 
 // Form types
 export interface LoginForm {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -113,7 +114,7 @@ export interface ProductForm {
 }
 
 export interface UserForm {
-  email: string;
+  username: string;
   password?: string;
   role: 'admin' | 'user';
   business_name?: string;

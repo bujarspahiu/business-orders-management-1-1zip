@@ -7,7 +7,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   cart: CartItem[];
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   addToCart: (product: Product, quantity: number) => boolean;
   updateCartQuantity: (productId: string, quantity: number) => boolean;
@@ -56,12 +56,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('lassa_cart', JSON.stringify(cart));
   }, [cart]);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { data, error } = await db.login(email, password);
+      const { data, error } = await db.login(username, password);
 
       if (error || !data) {
-        return { success: false, error: error || 'Invalid email or password' };
+        return { success: false, error: error || 'Invalid username or password' };
       }
 
       const userData: User = data as User;

@@ -13,7 +13,7 @@ interface LoginModalProps {
 const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { login } = useAuth();
   const { t } = useLanguage();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -24,12 +24,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) =
     setError('');
     setIsLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(username, password);
 
     if (result.success) {
       onSuccess();
       onClose();
-      setEmail('');
+      setUsername('');
       setPassword('');
     } else {
       setError(result.error || t.loginModal.loginFailed);
@@ -51,15 +51,15 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) =
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t.loginModal.emailAddress}
+              {t.loginModal.username}
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-              placeholder={t.loginModal.emailPlaceholder}
+              placeholder={t.loginModal.usernamePlaceholder}
             />
           </div>
 
@@ -118,8 +118,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) =
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
           <p className="text-xs text-gray-500 font-medium mb-2">{t.loginModal.demoCredentials}</p>
           <div className="text-xs text-gray-600 space-y-1">
-            <p><strong>{t.loginModal.admin}:</strong> admin@lassatires.com / admin123</p>
-            <p><strong>{t.loginModal.user}:</strong> autoservice@example.com / user123</p>
+            <p><strong>{t.loginModal.admin}:</strong> Admin / Admin</p>
           </div>
         </div>
       </div>

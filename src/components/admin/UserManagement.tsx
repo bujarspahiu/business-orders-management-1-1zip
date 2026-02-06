@@ -30,7 +30,7 @@ const UserManagement: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState<UserForm>({
-    email: '',
+    username: '',
     password: '',
     role: 'user',
     business_name: '',
@@ -72,7 +72,7 @@ const UserManagement: React.FC = () => {
     setFilteredUsers(
       users.filter(
         (u) =>
-          u.email.toLowerCase().includes(query) ||
+          u.username.toLowerCase().includes(query) ||
           u.business_name?.toLowerCase().includes(query) ||
           u.contact_person?.toLowerCase().includes(query)
       )
@@ -83,7 +83,7 @@ const UserManagement: React.FC = () => {
     if (user) {
       setEditingUser(user);
       setFormData({
-        email: user.email,
+        username: user.username,
         role: user.role,
         business_name: user.business_name || '',
         business_number: user.business_number || '',
@@ -96,7 +96,7 @@ const UserManagement: React.FC = () => {
     } else {
       setEditingUser(null);
       setFormData({
-        email: '',
+        username: '',
         password: '',
         role: 'user',
         business_name: '',
@@ -117,7 +117,7 @@ const UserManagement: React.FC = () => {
       if (editingUser) {
         // Update existing user
         const { error } = await db.updateUser(editingUser.id, {
-          email: formData.email,
+          username: formData.username,
           role: formData.role,
           business_name: formData.business_name,
           business_number: formData.business_number,
@@ -137,7 +137,7 @@ const UserManagement: React.FC = () => {
           return;
         }
         const { error } = await db.createUser({
-          email: formData.email,
+          username: formData.username,
           password: formData.password,
           role: formData.role,
           business_name: formData.business_name,
@@ -252,7 +252,7 @@ const UserManagement: React.FC = () => {
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">{user.email}</p>
+                    <p className="font-medium text-gray-900">{user.username}</p>
                     <p className="text-sm text-gray-500">
                       {new Date(user.created_at).toLocaleDateString()}
                     </p>
@@ -340,11 +340,11 @@ const UserManagement: React.FC = () => {
         <div className="p-6 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
               <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                type="text"
+                value={formData.username}
+                onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 required
               />

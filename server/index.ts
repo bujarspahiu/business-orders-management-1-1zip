@@ -28,7 +28,7 @@ async function ensureAdminExists() {
       const { v4: uuidv4 } = await import('uuid');
       const passwordHash = await bcrypt.hash('Admin', 10);
       await pool.query(
-        `INSERT INTO users (id, email, password_hash, role, is_active) VALUES ($1, 'Admin', $2, 'admin', true)`,
+        `INSERT INTO users (id, username, email, password_hash, role, is_active) VALUES ($1, 'Admin', 'Admin', $2, 'admin', true)`,
         [uuidv4(), passwordHash]
       );
       console.log('Default admin created (Admin/Admin)');
@@ -43,7 +43,7 @@ ensureAdminExists();
 // Users endpoints
 app.get('/api/users', async (req, res) => {
   try {
-    const result = await pool.query('SELECT id, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at FROM users ORDER BY created_at DESC');
+    const result = await pool.query('SELECT id, username, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at FROM users ORDER BY created_at DESC');
     res.json({ data: result.rows, error: null });
   } catch (error: any) {
     res.json({ data: null, error: error.message });
@@ -52,12 +52,12 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    const { email, password, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active } = req.body;
+    const { username, email, password, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active } = req.body;
     const password_hash = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (email, password_hash, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at`,
-      [email, password_hash, role || 'user', business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active !== false]
+      `INSERT INTO users (username, email, password_hash, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, username, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at`,
+      [username, email, password_hash, role || 'user', business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active !== false]
     );
     res.json({ data: result.rows[0], error: null });
   } catch (error: any) {
@@ -84,7 +84,7 @@ app.patch('/api/users/:id', async (req, res) => {
     values.push(id);
     
     const result = await pool.query(
-      `UPDATE users SET ${setClause} WHERE id = $${values.length} RETURNING id, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at`,
+      `UPDATE users SET ${setClause} WHERE id = $${values.length} RETURNING id, username, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at`,
       values
     );
     res.json({ data: result.rows[0], error: null });
@@ -106,8 +106,8 @@ app.delete('/api/users/:id', async (req, res) => {
 // Auth endpoint
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const { username, password } = req.body;
+    const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
     if (result.rows.length === 0) {
       return res.json({ data: null, error: 'Invalid credentials' });
     }
@@ -219,7 +219,7 @@ app.get('/api/orders', async (req, res) => {
     let query = `
       SELECT o.*, 
         json_agg(DISTINCT jsonb_build_object('id', oi.id, 'order_id', oi.order_id, 'product_id', oi.product_id, 'product_code', oi.product_code, 'product_name', oi.product_name, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'total_price', oi.total_price, 'created_at', oi.created_at)) FILTER (WHERE oi.id IS NOT NULL) as items,
-        jsonb_build_object('id', u.id, 'email', u.email, 'business_name', u.business_name, 'business_number', u.business_number, 'contact_person', u.contact_person, 'phone', u.phone, 'logo_url', u.logo_url) as user
+        jsonb_build_object('id', u.id, 'username', u.username, 'email', u.email, 'business_name', u.business_name, 'business_number', u.business_number, 'contact_person', u.contact_person, 'phone', u.phone, 'logo_url', u.logo_url) as user
       FROM orders o
       LEFT JOIN order_items oi ON o.id = oi.order_id
       LEFT JOIN users u ON o.user_id = u.id
