@@ -3,16 +3,14 @@ import { ArrowRight, Shield, Truck, Award } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface HeroProps {
-  onLoginClick: () => void;
   onExploreClick: () => void;
 }
 
-const Hero: React.FC<HeroProps> = ({ onLoginClick, onExploreClick }) => {
+const Hero: React.FC<HeroProps> = ({ onExploreClick }) => {
   const { t } = useLanguage();
 
   return (
     <section className="relative min-h-screen flex items-center pt-20">
-      {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <img
           src="https://d64gsuwffb70l.cloudfront.net/6970831999a5dc17b3f2cb41_1768982831203_b8524095.jpg"
@@ -22,10 +20,8 @@ const Hero: React.FC<HeroProps> = ({ onLoginClick, onExploreClick }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-900/40" />
       </div>
 
-      {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="max-w-2xl">
-          {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-orange-600/20 border border-orange-500/30 rounded-full px-4 py-2 mb-6">
             <img
               src="https://d64gsuwffb70l.cloudfront.net/6970831999a5dc17b3f2cb41_1768982838635_5740439c.png"
@@ -35,18 +31,15 @@ const Hero: React.FC<HeroProps> = ({ onLoginClick, onExploreClick }) => {
             <span className="text-orange-400 text-sm font-medium">{t.hero.badge}</span>
           </div>
 
-          {/* Headline */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
             {t.hero.headline}{' '}
             <span className="text-orange-500">{t.hero.headlineHighlight}</span>
           </h1>
 
-          {/* Subheadline */}
           <p className="text-lg sm:text-xl text-gray-300 mb-8 leading-relaxed">
             {t.hero.subheadline}
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 mb-12">
             <button
               onClick={onExploreClick}
@@ -57,8 +50,6 @@ const Hero: React.FC<HeroProps> = ({ onLoginClick, onExploreClick }) => {
             </button>
           </div>
 
-
-          {/* Trust Indicators */}
           <div className="grid grid-cols-3 gap-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-orange-600/20 rounded-lg">
@@ -91,7 +82,6 @@ const Hero: React.FC<HeroProps> = ({ onLoginClick, onExploreClick }) => {
         </div>
       </div>
 
-      {/* Decorative Elements */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent z-10" />
     </section>
   );

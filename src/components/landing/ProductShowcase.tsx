@@ -2,11 +2,7 @@ import React from 'react';
 import { Snowflake, Sun, Cloud, Car, Truck } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-interface ProductShowcaseProps {
-  onLoginClick: () => void;
-}
-
-const ProductShowcase: React.FC<ProductShowcaseProps> = ({ onLoginClick }) => {
+const ProductShowcase: React.FC = () => {
   const { t } = useLanguage();
 
   const categories = [
@@ -57,7 +53,6 @@ const ProductShowcase: React.FC<ProductShowcaseProps> = ({ onLoginClick }) => {
   return (
     <section id="products" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
         <div className="text-center mb-16">
           <span className="inline-block px-4 py-1 bg-orange-100 text-orange-600 rounded-full text-sm font-semibold mb-4">
             {t.productShowcase.badge}
@@ -70,7 +65,6 @@ const ProductShowcase: React.FC<ProductShowcaseProps> = ({ onLoginClick }) => {
           </p>
         </div>
 
-        {/* Season Categories */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           {categories.map((category, index) => (
             <div
@@ -96,7 +90,6 @@ const ProductShowcase: React.FC<ProductShowcaseProps> = ({ onLoginClick }) => {
           ))}
         </div>
 
-        {/* Vehicle Types */}
         <div className="bg-gray-50 rounded-3xl p-8 md:p-12">
           <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">
             {t.productShowcase.vehicleTypesTitle}

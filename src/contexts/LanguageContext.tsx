@@ -420,6 +420,12 @@ interface Translations {
     continueShopping: string;
     downloadFailed: string;
   };
+  // StaffPortal
+  staffPortal: {
+    title: string;
+    subtitle: string;
+    backToSite: string;
+  };
   // Common
   common: {
     loading: string;
@@ -858,6 +864,11 @@ const translations: Record<Language, Translations> = {
       no: 'Jo',
       na: 'N/A',
     },
+    staffPortal: {
+      title: 'Portali i Stafit',
+      subtitle: 'Identifikohuni për të aksesuar sistemin e menaxhimit',
+      backToSite: '← Kthehu në faqen kryesore',
+    },
   },
   en: {
     header: {
@@ -1278,6 +1289,11 @@ const translations: Record<Language, Translations> = {
       yes: 'Yes',
       no: 'No',
       na: 'N/A',
+    },
+    staffPortal: {
+      title: 'Staff Portal',
+      subtitle: 'Log in to access the business management system',
+      backToSite: '← Back to main site',
     },
   },
 };
