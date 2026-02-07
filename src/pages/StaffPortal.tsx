@@ -159,17 +159,15 @@ const StaffPortalContent: React.FC = () => {
           </form>
 
           <div className="mt-6 pt-5 border-t border-gray-200">
-            <p className="text-xs text-gray-500 text-center mb-3">{t.loginModal.demoCredentials}</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-xs font-semibold text-gray-700 mb-1">👔 {t.loginModal.admin}</p>
-                <p className="text-xs text-gray-500">admin / admin123</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-xs font-semibold text-gray-700 mb-1">🏪 {t.loginModal.user}</p>
-                <p className="text-xs text-gray-500">user / user123</p>
-              </div>
-            </div>
+            <p className="text-sm text-gray-600 text-center">
+              {t.loginModal.noAccount}{' '}
+              <a
+                href="/#contact"
+                className="text-orange-600 hover:text-orange-700 font-medium"
+              >
+                {t.loginModal.contactUs}
+              </a>
+            </p>
           </div>
         </div>
       </div>
