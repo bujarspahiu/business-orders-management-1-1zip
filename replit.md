@@ -26,10 +26,10 @@ Preferred communication style: Simple, everyday language.
 - **API**: RESTful endpoints proxied through Vite dev server
 
 ### Component Architecture
-- **Landing Pages**: Public-facing components (Header, Hero, ProductShowcase, About, Contact, Footer)
-- **Auth Components**: Login modal with session persistence via localStorage
-- **User Dashboard**: Order placement, cart management, order history
-- **Admin Dashboard**: User management, product management (with bulk CSV import), order management, notification settings
+- **Landing Pages**: Public-facing informational components (Header, Hero, ProductShowcase, About, Contact, Footer) — no login functionality
+- **Staff Portal** (`/staff`): Separate standalone login page and business dashboard at `/staff` URL, completely independent from the main website
+- **User Dashboard**: Order placement, cart management, order history (accessed via /staff after login)
+- **Admin Dashboard**: User management, product management (with bulk CSV import), order management, notification settings (accessed via /staff after login)
 - **UI Library**: Extensive shadcn/ui component library with custom Modal component
 
 ### Authentication Pattern
@@ -59,7 +59,7 @@ Preferred communication style: Simple, everyday language.
 The Express.js backend (`server/index.ts`) provides these endpoints:
 
 ### Authentication
-- `POST /api/auth/login` - User login with email/password
+- `POST /api/auth/login` - User login with username/password
 - `POST /api/auth/register` - New user registration
 
 ### Users
@@ -151,8 +151,15 @@ The mobile app is built with Capacitor v6, which wraps the web app as native And
 ### Workflow
 - "Start application" runs both backend (port 3001) and frontend (port 5000)
 
+### URL Structure
+- **`/`** — Public informational website (no login functionality)
+- **`/staff`** — Staff/business login portal (only accessible by typing the URL directly, no links from main site)
+
 ## Recent Changes
 
+- **Separated business login from main website**: Main site (/) is now purely informational. Business login portal lives at /staff with its own standalone login page
+- Converted authentication from email-based to username-based login
+- Admin credentials: Username: Admin, Password: Admin
 - Migrated from external Supabase to Replit's internal PostgreSQL database
 - Added Express.js backend server for API operations
 - Created custom database client (`src/lib/db.ts`) to replace Supabase client
