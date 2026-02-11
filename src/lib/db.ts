@@ -124,6 +124,16 @@ class DatabaseClient {
     });
   }
 
+  // Reports
+  async getReports(userId?: string, startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (userId) params.append('user_id', userId);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/reports${query}`);
+  }
+
   // Notification Recipients
   async getNotificationRecipients() {
     return this.request('/notification_recipients');

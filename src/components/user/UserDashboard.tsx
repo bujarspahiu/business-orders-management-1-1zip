@@ -12,7 +12,8 @@ import {
   ChevronRight,
   Building2,
   Download,
-  Loader2
+  Loader2,
+  BarChart3
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +24,7 @@ import CartDrawer from './CartDrawer';
 import CheckoutModal from './CheckoutModal';
 import OrderConfirmation from './OrderConfirmation';
 import UserProfile from './UserProfile';
+import Reports from '../admin/Reports';
 import { generatePDFFromOrder } from '@/lib/generatePDF';
 
 interface UserDashboardProps {
@@ -32,7 +34,7 @@ interface UserDashboardProps {
 const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
   const { user, getCartCount } = useAuth();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'profile'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'reports' | 'profile'>('products');
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -221,6 +223,17 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
               <span>{t.userDashboard.orders}</span>
             </button>
             <button
+              onClick={() => setActiveTab('reports')}
+              className={`flex items-center space-x-2 px-4 py-4 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'reports'
+                  ? 'border-orange-600 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>{t.reports.title}</span>
+            </button>
+            <button
               onClick={() => setActiveTab('profile')}
               className={`flex items-center space-x-2 px-4 py-4 border-b-2 font-medium text-sm transition-colors ${
                 activeTab === 'profile'
@@ -339,6 +352,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
           </div>
         )}
 
+        {activeTab === 'reports' && <Reports userId={user?.id} />}
         {activeTab === 'profile' && <UserProfile />}
       </main>
 

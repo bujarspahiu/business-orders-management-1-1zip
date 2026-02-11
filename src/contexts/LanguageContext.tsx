@@ -420,6 +420,29 @@ interface Translations {
     continueShopping: string;
     downloadFailed: string;
   };
+  // Reports
+  reports: {
+    title: string;
+    salesReport: string;
+    purchaseReport: string;
+    description: string;
+    daily: string;
+    weekly: string;
+    monthly: string;
+    yearly: string;
+    totalOrders: string;
+    totalItems: string;
+    totalRevenue: string;
+    orderNumber: string;
+    date: string;
+    customer: string;
+    items: string;
+    amount: string;
+    status: string;
+    noData: string;
+    exportPDF: string;
+    generatedOn: string;
+  };
   // StaffPortal
   staffPortal: {
     title: string;
@@ -573,6 +596,7 @@ const translations: Record<Language, Translations> = {
       products: 'Produktet',
       orders: 'Porositë',
       notifications: 'Njoftimet',
+      reports: 'Raportet',
       adminPanel: 'Paneli i Administratorit',
       totalUsers: 'Totali Përdoruesve',
       totalProducts: 'Totali Produkteve',
@@ -750,6 +774,7 @@ const translations: Record<Language, Translations> = {
       orderHistoryHint: 'Historia e porosive tuaja do të shfaqet këtu',
       downloadPO: 'Shkarko PO',
       moreItems: 'artikuj të tjerë',
+      reports: 'Raportet',
     },
     cartDrawer: {
       cart: 'Shporta',
@@ -863,6 +888,28 @@ const translations: Record<Language, Translations> = {
       yes: 'Po',
       no: 'Jo',
       na: 'N/A',
+    },
+    reports: {
+      title: 'Raportet',
+      salesReport: 'Raporti i Shitjeve',
+      purchaseReport: 'Raporti i Blerjeve',
+      description: 'Gjeneroni raporte për periudha të ndryshme kohore',
+      daily: 'Ditore',
+      weekly: 'Javore',
+      monthly: 'Mujore',
+      yearly: 'Vjetore',
+      totalOrders: 'Totali Porosive',
+      totalItems: 'Totali Artikujve',
+      totalRevenue: 'Të Ardhurat Totale',
+      orderNumber: 'Nr. Porosisë',
+      date: 'Data',
+      customer: 'Klienti',
+      items: 'Artikujt',
+      amount: 'Shuma',
+      status: 'Statusi',
+      noData: 'Nuk ka të dhëna për këtë periudhë',
+      exportPDF: 'Eksporto PDF',
+      generatedOn: 'Gjeneruar më',
     },
     staffPortal: {
       title: 'Portali i Stafit',
@@ -999,6 +1046,7 @@ const translations: Record<Language, Translations> = {
       products: 'Products',
       orders: 'Orders',
       notifications: 'Notifications',
+      reports: 'Reports',
       adminPanel: 'Admin Panel',
       totalUsers: 'Total Users',
       totalProducts: 'Total Products',
@@ -1176,6 +1224,7 @@ const translations: Record<Language, Translations> = {
       orderHistoryHint: 'Your order history will appear here',
       downloadPO: 'Download PO',
       moreItems: 'more items',
+      reports: 'Reports',
     },
     cartDrawer: {
       cart: 'Cart',
@@ -1289,6 +1338,28 @@ const translations: Record<Language, Translations> = {
       yes: 'Yes',
       no: 'No',
       na: 'N/A',
+    },
+    reports: {
+      title: 'Reports',
+      salesReport: 'Sales Report',
+      purchaseReport: 'Purchase Report',
+      description: 'Generate reports for different time periods',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      yearly: 'Yearly',
+      totalOrders: 'Total Orders',
+      totalItems: 'Total Items',
+      totalRevenue: 'Total Revenue',
+      orderNumber: 'Order #',
+      date: 'Date',
+      customer: 'Customer',
+      items: 'Items',
+      amount: 'Amount',
+      status: 'Status',
+      noData: 'No data for this period',
+      exportPDF: 'Export PDF',
+      generatedOn: 'Generated on',
     },
     staffPortal: {
       title: 'Staff Portal',

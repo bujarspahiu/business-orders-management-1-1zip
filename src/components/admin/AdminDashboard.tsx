@@ -11,7 +11,8 @@ import {
   ShoppingCart,
   DollarSign,
   Menu,
-  X
+  X,
+  BarChart3
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +21,7 @@ import UserManagement from './UserManagement';
 import ProductManagement from './ProductManagement';
 import OrderManagement from './OrderManagement';
 import NotificationSettings from './NotificationSettings';
+import Reports from './Reports';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -37,7 +39,7 @@ interface DashboardStats {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'products' | 'orders' | 'notifications'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'products' | 'orders' | 'reports' | 'notifications'>('dashboard');
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalProducts: 0,
@@ -94,6 +96,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'users', label: t.adminDashboard.users, icon: Users },
     { id: 'products', label: t.adminDashboard.products, icon: Package },
     { id: 'orders', label: t.adminDashboard.orders, icon: FileText },
+    { id: 'reports', label: t.reports.title, icon: BarChart3 },
     { id: 'notifications', label: t.adminDashboard.notifications, icon: Bell },
   ];
 
@@ -196,7 +199,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 {activeTab === 'dashboard' ? t.adminDashboard.adminPanel : 
                  activeTab === 'users' ? t.adminDashboard.users :
                  activeTab === 'products' ? t.adminDashboard.products :
-                 activeTab === 'orders' ? t.adminDashboard.orders : t.adminDashboard.notifications}
+                 activeTab === 'orders' ? t.adminDashboard.orders :
+                 activeTab === 'reports' ? t.reports.title : t.adminDashboard.notifications}
               </h1>
             </div>
             <div className="flex items-center space-x-3">
@@ -318,6 +322,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           {activeTab === 'users' && <UserManagement />}
           {activeTab === 'products' && <ProductManagement />}
           {activeTab === 'orders' && <OrderManagement />}
+          {activeTab === 'reports' && <Reports />}
           {activeTab === 'notifications' && <NotificationSettings />}
         </main>
       </div>

@@ -294,6 +294,65 @@ app.patch('/api/orders/:id', async (req, res) => {
   }
 });
 
+// Reports endpoint
+app.get('/api/reports', async (req, res) => {
+  try {
+    const { user_id, start_date, end_date } = req.query;
+    const params: any[] = [];
+    let whereClause = '';
+    const conditions: string[] = [];
+    
+    if (user_id) {
+      params.push(user_id);
+      conditions.push(`o.user_id = $${params.length}`);
+    }
+    if (start_date) {
+      params.push(start_date);
+      conditions.push(`o.created_at >= $${params.length}::timestamp`);
+    }
+    if (end_date) {
+      params.push(end_date);
+      conditions.push(`o.created_at <= $${params.length}::timestamp`);
+    }
+    
+    if (conditions.length > 0) {
+      whereClause = ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    const query = `
+      SELECT o.*, 
+        json_agg(DISTINCT jsonb_build_object('id', oi.id, 'order_id', oi.order_id, 'product_id', oi.product_id, 'product_code', oi.product_code, 'product_name', oi.product_name, 'quantity', oi.quantity, 'unit_price', oi.unit_price, 'total_price', oi.total_price)) FILTER (WHERE oi.id IS NOT NULL) as items,
+        jsonb_build_object('id', u.id, 'username', u.username, 'email', u.email, 'business_name', u.business_name, 'business_number', u.business_number, 'contact_person', u.contact_person, 'phone', u.phone) as user
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN users u ON o.user_id = u.id
+      ${whereClause}
+      GROUP BY o.id, u.id
+      ORDER BY o.created_at DESC
+    `;
+    
+    const result = await pool.query(query, params);
+    const orders = result.rows;
+    
+    const totalOrders = orders.length;
+    const totalItems = orders.reduce((sum: number, o: any) => {
+      const items = o.items || [];
+      return sum + items.reduce((iSum: number, i: any) => iSum + (Number(i.quantity) || 0), 0);
+    }, 0);
+    const totalRevenue = orders.reduce((sum: number, o: any) => sum + (Number(o.total_amount) || 0), 0);
+    
+    res.json({ 
+      data: { 
+        orders, 
+        summary: { totalOrders, totalItems, totalRevenue } 
+      }, 
+      error: null 
+    });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
 // Notification recipients endpoints
 app.get('/api/notification_recipients', async (req, res) => {
   try {
