@@ -21,6 +21,13 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+async function runMigrations() {
+  try {
+    await pool.query('ALTER TABLE users ALTER COLUMN email DROP NOT NULL');
+  } catch (e) {
+  }
+}
+
 async function ensureAdminExists() {
   try {
     const result = await pool.query("SELECT id FROM users WHERE role = 'admin'");
@@ -38,7 +45,7 @@ async function ensureAdminExists() {
   }
 }
 
-ensureAdminExists();
+runMigrations().then(() => ensureAdminExists());
 
 // Users endpoints
 app.get('/api/users', async (req, res) => {
@@ -57,7 +64,7 @@ app.post('/api/users', async (req, res) => {
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active) 
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, username, email, role, business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active, created_at, updated_at`,
-      [username, email, password_hash, role || 'user', business_name, business_number, phone, whatsapp, viber, contact_person, logo_url, is_active !== false]
+      [username, email || null, password_hash, role || 'user', business_name || null, business_number || null, phone || null, whatsapp || null, viber || null, contact_person || null, logo_url || null, is_active !== false]
     );
     res.json({ data: result.rows[0], error: null });
   } catch (error: any) {
