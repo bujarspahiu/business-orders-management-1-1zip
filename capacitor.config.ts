@@ -7,6 +7,12 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https',
     iosScheme: 'https',
+    allowNavigation: [
+      'business-orders-management-1-1-zip.replit.app',
+      '*.replit.app',
+      'lassaks.online',
+      '*.lassaks.online',
+    ],
   },
   plugins: {
     SplashScreen: {
