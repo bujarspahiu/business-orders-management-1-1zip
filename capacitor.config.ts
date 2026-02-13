@@ -5,6 +5,8 @@ const config: CapacitorConfig = {
   appName: 'Lassa Tyres',
   webDir: 'dist',
   server: {
+    url: 'https://business-orders-management-1-1-zip.replit.app/staff',
+    cleartext: false,
     androidScheme: 'https',
     iosScheme: 'https',
     allowNavigation: [
