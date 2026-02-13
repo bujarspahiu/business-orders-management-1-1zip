@@ -15,8 +15,10 @@ import {
 import { db } from '@/lib/db';
 import { User, UserForm } from '@/types';
 import Modal from '@/components/ui/Modal';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const UserManagement: React.FC = () => {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -115,7 +117,6 @@ const UserManagement: React.FC = () => {
     setIsSaving(true);
     try {
       if (editingUser) {
-        // Update existing user
         const { error } = await db.updateUser(editingUser.id, {
           username: formData.username,
           role: formData.role,
@@ -130,9 +131,8 @@ const UserManagement: React.FC = () => {
 
         if (error) throw new Error(error);
       } else {
-        // Create new user
         if (!formData.password) {
-          alert('Password is required for new users');
+          alert(t.userManagement.passwordRequired);
           setIsSaving(false);
           return;
         }
@@ -156,7 +156,7 @@ const UserManagement: React.FC = () => {
       fetchUsers();
     } catch (error) {
       console.error('Error saving user:', error);
-      alert('Failed to save user');
+      alert(t.userManagement.failedToSave);
     } finally {
       setIsSaving(false);
     }
@@ -174,7 +174,7 @@ const UserManagement: React.FC = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+    if (!confirm(t.userManagement.deleteConfirm)) return;
     try {
       const { error } = await db.deleteUser(userId);
       if (error) throw new Error(error);
@@ -194,10 +194,10 @@ const UserManagement: React.FC = () => {
       setResetPasswordModal(false);
       setNewPassword('');
       setSelectedUserId(null);
-      alert('Password updated successfully');
+      alert(t.userManagement.passwordUpdated);
     } catch (error) {
       console.error('Error resetting password:', error);
-      alert('Failed to reset password');
+      alert(t.userManagement.failedToReset);
     } finally {
       setIsSaving(false);
     }
@@ -213,7 +213,6 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -221,7 +220,7 @@ const UserManagement: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search users..."
+            placeholder={t.userManagement.searchPlaceholder}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
@@ -230,22 +229,21 @@ const UserManagement: React.FC = () => {
           className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
         >
           <Plus className="w-5 h-5" />
-          <span>Add User</span>
+          <span>{t.userManagement.addUser}</span>
         </button>
       </div>
 
-      {/* Users Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-6 py-4 font-medium text-gray-700">User</th>
-                <th className="text-left px-6 py-4 font-medium text-gray-700">Business</th>
-                <th className="text-left px-6 py-4 font-medium text-gray-700">Contact</th>
-                <th className="text-center px-6 py-4 font-medium text-gray-700">Role</th>
-                <th className="text-center px-6 py-4 font-medium text-gray-700">Status</th>
-                <th className="text-right px-6 py-4 font-medium text-gray-700">Actions</th>
+                <th className="text-left px-6 py-4 font-medium text-gray-700">{t.userManagement.user}</th>
+                <th className="text-left px-6 py-4 font-medium text-gray-700">{t.userManagement.business}</th>
+                <th className="text-left px-6 py-4 font-medium text-gray-700">{t.userManagement.contact}</th>
+                <th className="text-center px-6 py-4 font-medium text-gray-700">{t.userManagement.role}</th>
+                <th className="text-center px-6 py-4 font-medium text-gray-700">{t.userManagement.status}</th>
+                <th className="text-right px-6 py-4 font-medium text-gray-700">{t.userManagement.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -269,14 +267,14 @@ const UserManagement: React.FC = () => {
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                       user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
                     }`}>
-                      {user.role}
+                      {user.role === 'admin' ? t.userManagement.admin : t.userManagement.userRole}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
                       user.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
-                      {user.is_active ? 'Active' : 'Inactive'}
+                      {user.is_active ? t.userManagement.active : t.userManagement.inactive}
                     </span>
                   </td>
                   <td className="px-6 py-4">
@@ -284,7 +282,7 @@ const UserManagement: React.FC = () => {
                       <button
                         onClick={() => handleOpenModal(user)}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Edit"
+                        title={t.userManagement.edit}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -294,7 +292,7 @@ const UserManagement: React.FC = () => {
                           setResetPasswordModal(true);
                         }}
                         className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                        title="Reset Password"
+                        title={t.userManagement.resetPassword}
                       >
                         <Key className="w-4 h-4" />
                       </button>
@@ -305,14 +303,14 @@ const UserManagement: React.FC = () => {
                             ? 'text-gray-400 hover:text-red-600 hover:bg-red-50'
                             : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
                         }`}
-                        title={user.is_active ? 'Disable' : 'Enable'}
+                        title={user.is_active ? t.userManagement.disable : t.userManagement.enable}
                       >
                         {user.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
                       </button>
                       <button
                         onClick={() => handleDeleteUser(user.id)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
+                        title={t.common.delete}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -325,22 +323,21 @@ const UserManagement: React.FC = () => {
         </div>
         {filteredUsers.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No users found</p>
+            <p className="text-gray-500">{t.userManagement.noUsersFound}</p>
           </div>
         )}
       </div>
 
-      {/* Add/Edit User Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingUser ? 'Edit User' : 'Add New User'}
+        title={editingUser ? t.userManagement.editUser : t.userManagement.addNewUser}
         size="lg"
       >
         <div className="p-6 space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.email}</label>
               <input
                 type="text"
                 value={formData.username}
@@ -351,7 +348,7 @@ const UserManagement: React.FC = () => {
             </div>
             {!editingUser && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.password}</label>
                 <input
                   type="password"
                   value={formData.password}
@@ -362,18 +359,18 @@ const UserManagement: React.FC = () => {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.role}</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'admin' | 'user' }))}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               >
-                <option value="user">User</option>
-                <option value="admin">Admin</option>
+                <option value="user">{t.userManagement.userRole}</option>
+                <option value="admin">{t.userManagement.admin}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.businessName}</label>
               <input
                 type="text"
                 value={formData.business_name}
@@ -382,7 +379,7 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Business Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.businessNumber}</label>
               <input
                 type="text"
                 value={formData.business_number}
@@ -391,7 +388,7 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.contactPerson}</label>
               <input
                 type="text"
                 value={formData.contact_person}
@@ -400,7 +397,7 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.phone}</label>
               <input
                 type="tel"
                 value={formData.phone}
@@ -409,7 +406,7 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.whatsapp}</label>
               <input
                 type="tel"
                 value={formData.whatsapp}
@@ -418,7 +415,7 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Viber</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.viber}</label>
               <input
                 type="tel"
                 value={formData.viber}
@@ -434,7 +431,7 @@ const UserManagement: React.FC = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
                   className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
                 />
-                <span className="text-sm font-medium text-gray-700">Active Account</span>
+                <span className="text-sm font-medium text-gray-700">{t.userManagement.activeAccount}</span>
               </label>
             </div>
           </div>
@@ -444,7 +441,7 @@ const UserManagement: React.FC = () => {
               onClick={() => setModalOpen(false)}
               className="px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
             >
-              Cancel
+              {t.userManagement.cancel}
             </button>
             <button
               onClick={handleSaveUser}
@@ -452,13 +449,12 @@ const UserManagement: React.FC = () => {
               className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors disabled:opacity-50"
             >
               {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{editingUser ? 'Update User' : 'Create User'}</span>
+              <span>{editingUser ? t.userManagement.updateUser : t.userManagement.createUser}</span>
             </button>
           </div>
         </div>
       </Modal>
 
-      {/* Reset Password Modal */}
       <Modal
         isOpen={resetPasswordModal}
         onClose={() => {
@@ -466,15 +462,15 @@ const UserManagement: React.FC = () => {
           setNewPassword('');
           setSelectedUserId(null);
         }}
-        title="Reset Password"
+        title={t.userManagement.resetPassword}
         size="sm"
       >
         <div className="p-6 space-y-4">
           <p className="text-sm text-gray-600">
-            Enter a new password for this user. The password will be updated immediately.
+            {t.userManagement.resetPasswordDescription}
           </p>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.userManagement.newPassword}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -501,7 +497,7 @@ const UserManagement: React.FC = () => {
               }}
               className="px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
             >
-              Cancel
+              {t.userManagement.cancel}
             </button>
             <button
               onClick={handleResetPassword}
@@ -509,7 +505,7 @@ const UserManagement: React.FC = () => {
               className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors disabled:opacity-50"
             >
               {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>Reset Password</span>
+              <span>{t.userManagement.resetPassword}</span>
             </button>
           </div>
         </div>

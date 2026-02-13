@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,6 +21,76 @@ if (process.env.NODE_ENV === 'production' || !process.env.NODE_ENV) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
+
+async function sendOrderNotification(order: any, orderItems: any[], customer: any) {
+  try {
+    const recipientsResult = await pool.query('SELECT * FROM notification_recipients WHERE is_active = true');
+    const recipients = recipientsResult.rows;
+    if (recipients.length === 0) return;
+
+    const toEmails = recipients.map((r: any) => r.email).join(', ');
+    const itemsHtml = orderItems.map((item: any) =>
+      `<tr><td style="padding:8px;border:1px solid #e5e7eb">${item.product_code}</td><td style="padding:8px;border:1px solid #e5e7eb">${item.product_name}</td><td style="padding:8px;border:1px solid #e5e7eb;text-align:center">${item.quantity}</td><td style="padding:8px;border:1px solid #e5e7eb;text-align:right">&euro;${Number(item.unit_price).toFixed(2)}</td><td style="padding:8px;border:1px solid #e5e7eb;text-align:right">&euro;${Number(item.total_price).toFixed(2)}</td></tr>`
+    ).join('');
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+        <div style="background:#ea580c;padding:20px;text-align:center">
+          <h1 style="color:#fff;margin:0">Lassa Tyres</h1>
+          <p style="color:#fed7aa;margin:5px 0 0">Porosi e Re / New Order</p>
+        </div>
+        <div style="padding:20px;background:#f9fafb">
+          <h2 style="color:#1f2937">Porosi #${order.order_number}</h2>
+          <div style="background:#fff;padding:15px;border-radius:8px;margin-bottom:15px">
+            <h3 style="color:#ea580c;margin-top:0">Klienti / Customer</h3>
+            <p><strong>Biznesi:</strong> ${customer?.business_name || 'N/A'}</p>
+            <p><strong>Nr. Biznesit:</strong> ${customer?.business_number || 'N/A'}</p>
+            <p><strong>Kontakti:</strong> ${customer?.contact_person || 'N/A'}</p>
+            <p><strong>Telefon:</strong> ${customer?.phone || 'N/A'}</p>
+          </div>
+          <div style="background:#fff;padding:15px;border-radius:8px;margin-bottom:15px">
+            <h3 style="color:#ea580c;margin-top:0">Artikujt / Items</h3>
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr style="background:#f3f4f6">
+                <th style="padding:8px;border:1px solid #e5e7eb;text-align:left">Kodi</th>
+                <th style="padding:8px;border:1px solid #e5e7eb;text-align:left">Produkti</th>
+                <th style="padding:8px;border:1px solid #e5e7eb;text-align:center">Sasia</th>
+                <th style="padding:8px;border:1px solid #e5e7eb;text-align:right">Cmimi</th>
+                <th style="padding:8px;border:1px solid #e5e7eb;text-align:right">Totali</th>
+              </tr></thead>
+              <tbody>${itemsHtml}</tbody>
+            </table>
+            <div style="text-align:right;margin-top:10px;padding-top:10px;border-top:2px solid #ea580c">
+              <strong style="font-size:18px;color:#ea580c">Totali: &euro;${Number(order.total_amount).toFixed(2)}</strong>
+            </div>
+          </div>
+          ${order.notes ? `<div style="background:#fff;padding:15px;border-radius:8px"><h3 style="color:#ea580c;margin-top:0">Shenime / Notes</h3><p>${order.notes}</p></div>` : ''}
+        </div>
+        <div style="background:#1f2937;padding:15px;text-align:center">
+          <p style="color:#9ca3af;margin:0;font-size:12px">Lassa Tyres B2B - Together in Every Mile</p>
+        </div>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: `"Lassa Tyres B2B" <${process.env.GMAIL_USER}>`,
+      to: toEmails,
+      subject: `Porosi e Re #${order.order_number} - ${customer?.business_name || 'N/A'}`,
+      html,
+    });
+    console.log(`Email notification sent for order ${order.order_number} to ${toEmails}`);
+  } catch (error) {
+    console.error('Failed to send email notification:', error);
+  }
+}
 
 async function runMigrations() {
   try {
@@ -128,6 +199,25 @@ app.post('/api/auth/login', async (req, res) => {
     }
     const { password_hash, ...userData } = user;
     res.json({ data: userData, error: null });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
+app.post('/api/auth/change-password', async (req, res) => {
+  try {
+    const { userId, currentPassword, newPassword } = req.body;
+    const result = await pool.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.json({ data: null, error: 'User not found' });
+    }
+    const valid = await bcrypt.compare(currentPassword, result.rows[0].password_hash);
+    if (!valid) {
+      return res.json({ data: null, error: 'Current password is incorrect' });
+    }
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2', [newHash, userId]);
+    res.json({ data: { success: true }, error: null });
   } catch (error: any) {
     res.json({ data: null, error: error.message });
   }
@@ -271,6 +361,11 @@ app.post('/api/orders', async (req, res) => {
     }
     
     await client.query('COMMIT');
+
+    const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);
+    const customer = userResult.rows[0] || null;
+    sendOrderNotification(order, orderItems, customer);
+
     res.json({ data: { ...order, items: orderItems }, error: null });
   } catch (error: any) {
     await client.query('ROLLBACK');

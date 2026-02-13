@@ -10,8 +10,10 @@ import {
 import { db } from '@/lib/db';
 import { NotificationRecipient } from '@/types';
 import Modal from '@/components/ui/Modal';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const NotificationSettings: React.FC = () => {
+  const { t } = useLanguage();
   const [recipients, setRecipients] = useState<NotificationRecipient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -56,7 +58,7 @@ const NotificationSettings: React.FC = () => {
       fetchRecipients();
     } catch (error) {
       console.error('Error adding recipient:', error);
-      alert('Failed to add recipient');
+      alert(t.notificationSettings.failedToAdd);
     } finally {
       setIsSaving(false);
     }
@@ -74,7 +76,7 @@ const NotificationSettings: React.FC = () => {
   };
 
   const handleDeleteRecipient = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this recipient?')) return;
+    if (!confirm(t.notificationSettings.removeConfirm)) return;
     try {
       const { error } = await db.deleteNotificationRecipient(id);
 
@@ -110,41 +112,37 @@ const NotificationSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Info Card */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <div className="flex items-start space-x-4">
           <div className="p-3 bg-blue-100 rounded-lg">
             <Bell className="w-6 h-6 text-blue-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Email Notifications</h3>
+            <h3 className="font-semibold text-blue-900 mb-1">{t.notificationSettings.title}</h3>
             <p className="text-blue-700 text-sm">
-              Configure email recipients for order notifications. Each recipient will receive 
-              emails when new orders are placed based on their role.
+              {t.notificationSettings.description}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Notification Recipients</h2>
+        <h2 className="text-lg font-semibold text-gray-900">{t.notificationSettings.recipients}</h2>
         <button
           onClick={() => setModalOpen(true)}
           className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
         >
           <Plus className="w-5 h-5" />
-          <span>Add Recipient</span>
+          <span>{t.notificationSettings.addRecipient}</span>
         </button>
       </div>
 
-      {/* Recipients List */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {recipients.length === 0 ? (
           <div className="text-center py-12">
             <Mail className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No notification recipients configured</p>
-            <p className="text-sm text-gray-400 mt-1">Add recipients to receive order notifications</p>
+            <p className="text-gray-500">{t.notificationSettings.noRecipients}</p>
+            <p className="text-sm text-gray-400 mt-1">{t.notificationSettings.addRecipientsHint}</p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200">
@@ -179,10 +177,10 @@ const NotificationSettings: React.FC = () => {
                     {recipient.is_active ? (
                       <>
                         <CheckCircle className="w-4 h-4" />
-                        <span>Active</span>
+                        <span>{t.notificationSettings.active}</span>
                       </>
                     ) : (
-                      <span>Inactive</span>
+                      <span>{t.notificationSettings.inactive}</span>
                     )}
                   </button>
                   <button
@@ -198,50 +196,48 @@ const NotificationSettings: React.FC = () => {
         )}
       </div>
 
-      {/* Notification Types Info */}
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="font-semibold text-gray-900 mb-4">Notification Types by Role</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">{t.notificationSettings.notificationTypes}</h3>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-4 bg-purple-50 rounded-lg">
             <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700 mb-2">
-              Admin
+              {t.notificationSettings.adminRole}
             </span>
-            <p className="text-sm text-gray-700">Receives all order notifications and system alerts</p>
+            <p className="text-sm text-gray-700">{t.notificationSettings.adminDescription}</p>
           </div>
           <div className="p-4 bg-blue-50 rounded-lg">
             <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 mb-2">
-              Warehouse
+              {t.notificationSettings.warehouseRole}
             </span>
-            <p className="text-sm text-gray-700">Receives notifications for order fulfillment and shipping</p>
+            <p className="text-sm text-gray-700">{t.notificationSettings.warehouseDescription}</p>
           </div>
           <div className="p-4 bg-green-50 rounded-lg">
             <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 mb-2">
-              Finance
+              {t.notificationSettings.financeRole}
             </span>
-            <p className="text-sm text-gray-700">Receives order confirmations and payment notifications</p>
+            <p className="text-sm text-gray-700">{t.notificationSettings.financeDescription}</p>
           </div>
           <div className="p-4 bg-orange-50 rounded-lg">
             <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 mb-2">
-              Manager
+              {t.notificationSettings.managerRole}
             </span>
-            <p className="text-sm text-gray-700">Receives daily/weekly order summaries and reports</p>
+            <p className="text-sm text-gray-700">{t.notificationSettings.managerDescription}</p>
           </div>
         </div>
       </div>
 
-      {/* Add Recipient Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => {
           setModalOpen(false);
           setFormData({ email: '', name: '', role: 'admin' });
         }}
-        title="Add Notification Recipient"
+        title={t.notificationSettings.addRecipient}
         size="sm"
       >
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.notificationSettings.emailAddress}</label>
             <input
               type="email"
               value={formData.email}
@@ -252,7 +248,7 @@ const NotificationSettings: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Name (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.notificationSettings.nameOptional}</label>
             <input
               type="text"
               value={formData.name}
@@ -262,16 +258,16 @@ const NotificationSettings: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.notificationSettings.role}</label>
             <select
               value={formData.role}
               onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as any }))}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             >
-              <option value="admin">Admin</option>
-              <option value="warehouse">Warehouse</option>
-              <option value="finance">Finance</option>
-              <option value="manager">Manager</option>
+              <option value="admin">{t.notificationSettings.adminRole}</option>
+              <option value="warehouse">{t.notificationSettings.warehouseRole}</option>
+              <option value="finance">{t.notificationSettings.financeRole}</option>
+              <option value="manager">{t.notificationSettings.managerRole}</option>
             </select>
           </div>
 
@@ -283,7 +279,7 @@ const NotificationSettings: React.FC = () => {
               }}
               className="px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
             >
-              Cancel
+              {t.notificationSettings.cancel}
             </button>
             <button
               onClick={handleAddRecipient}
@@ -291,7 +287,7 @@ const NotificationSettings: React.FC = () => {
               className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors disabled:opacity-50"
             >
               {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>Add Recipient</span>
+              <span>{t.notificationSettings.add}</span>
             </button>
           </div>
         </div>

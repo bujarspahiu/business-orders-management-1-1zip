@@ -42,3 +42,8 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["npx", "tsx", "server/index.ts"]
 build = ["npm", "run", "build"]
+
+[userenv]
+
+[userenv.shared]
+GMAIL_USER = "titanshopservice@gmail.com"

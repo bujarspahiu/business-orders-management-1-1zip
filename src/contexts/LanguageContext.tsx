@@ -154,6 +154,7 @@ interface Translations {
     allSystemsNormal: string;
     noAlerts: string;
     pending: string;
+    reports: string;
   };
   // OrderManagement
   orderManagement: {
@@ -315,6 +316,7 @@ interface Translations {
     orderHistoryHint: string;
     downloadPO: string;
     moreItems: string;
+    reports: string;
   };
   // CartDrawer
   cartDrawer: {
@@ -448,6 +450,29 @@ interface Translations {
     title: string;
     subtitle: string;
     backToSite: string;
+  };
+  adminSettings: {
+    title: string;
+    profileInfo: string;
+    changePassword: string;
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+    username: string;
+    email: string;
+    businessName: string;
+    businessNumber: string;
+    contactPerson: string;
+    phone: string;
+    whatsapp: string;
+    viber: string;
+    saveChanges: string;
+    passwordChanged: string;
+    profileUpdated: string;
+    passwordMismatch: string;
+    currentPasswordRequired: string;
+    updateFailed: string;
+    settings: string;
   };
   // Common
   common: {
@@ -916,6 +941,29 @@ const translations: Record<Language, Translations> = {
       subtitle: 'Identifikohuni për të aksesuar sistemin e menaxhimit',
       backToSite: '← Kthehu në faqen kryesore',
     },
+    adminSettings: {
+      title: 'Cilësimet e Administratorit',
+      profileInfo: 'Informacioni i Profilit',
+      changePassword: 'Ndrysho Fjalëkalimin',
+      currentPassword: 'Fjalëkalimi Aktual',
+      newPassword: 'Fjalëkalimi i Ri',
+      confirmPassword: 'Konfirmo Fjalëkalimin',
+      username: 'Emri i Përdoruesit',
+      email: 'Email',
+      businessName: 'Emri i Biznesit',
+      businessNumber: 'Numri i Biznesit',
+      contactPerson: 'Personi i Kontaktit',
+      phone: 'Telefon',
+      whatsapp: 'WhatsApp',
+      viber: 'Viber',
+      saveChanges: 'Ruaj Ndryshimet',
+      passwordChanged: 'Fjalëkalimi u ndryshua me sukses',
+      profileUpdated: 'Profili u përditësua me sukses',
+      passwordMismatch: 'Fjalëkalimet nuk përputhen',
+      currentPasswordRequired: 'Fjalëkalimi aktual kërkohet',
+      updateFailed: 'Dështoi përditësimi',
+      settings: 'Cilësimet',
+    },
   },
   en: {
     header: {
@@ -1365,6 +1413,29 @@ const translations: Record<Language, Translations> = {
       title: 'Staff Portal',
       subtitle: 'Log in to access the business management system',
       backToSite: '← Back to main site',
+    },
+    adminSettings: {
+      title: 'Admin Settings',
+      profileInfo: 'Profile Information',
+      changePassword: 'Change Password',
+      currentPassword: 'Current Password',
+      newPassword: 'New Password',
+      confirmPassword: 'Confirm Password',
+      username: 'Username',
+      email: 'Email',
+      businessName: 'Business Name',
+      businessNumber: 'Business Number',
+      contactPerson: 'Contact Person',
+      phone: 'Phone',
+      whatsapp: 'WhatsApp',
+      viber: 'Viber',
+      saveChanges: 'Save Changes',
+      passwordChanged: 'Password changed successfully',
+      profileUpdated: 'Profile updated successfully',
+      passwordMismatch: 'Passwords do not match',
+      currentPasswordRequired: 'Current password is required',
+      updateFailed: 'Update failed',
+      settings: 'Settings',
     },
   },
 };

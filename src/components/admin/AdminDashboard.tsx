@@ -22,6 +22,7 @@ import ProductManagement from './ProductManagement';
 import OrderManagement from './OrderManagement';
 import NotificationSettings from './NotificationSettings';
 import Reports from './Reports';
+import AdminSettings from './AdminSettings';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -39,7 +40,7 @@ interface DashboardStats {
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'products' | 'orders' | 'reports' | 'notifications'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'products' | 'orders' | 'reports' | 'notifications' | 'settings'>('dashboard');
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalProducts: 0,
@@ -98,6 +99,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { id: 'orders', label: t.adminDashboard.orders, icon: FileText },
     { id: 'reports', label: t.reports.title, icon: BarChart3 },
     { id: 'notifications', label: t.adminDashboard.notifications, icon: Bell },
+    { id: 'settings', label: t.adminSettings.settings, icon: Settings },
   ];
 
   const statCards = [
@@ -200,7 +202,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                  activeTab === 'users' ? t.adminDashboard.users :
                  activeTab === 'products' ? t.adminDashboard.products :
                  activeTab === 'orders' ? t.adminDashboard.orders :
-                 activeTab === 'reports' ? t.reports.title : t.adminDashboard.notifications}
+                 activeTab === 'reports' ? t.reports.title :
+                 activeTab === 'settings' ? t.adminSettings.settings : t.adminDashboard.notifications}
               </h1>
             </div>
             <div className="flex items-center space-x-3">
@@ -324,6 +327,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           {activeTab === 'orders' && <OrderManagement />}
           {activeTab === 'reports' && <Reports />}
           {activeTab === 'notifications' && <NotificationSettings />}
+          {activeTab === 'settings' && <AdminSettings />}
         </main>
       </div>
     </div>

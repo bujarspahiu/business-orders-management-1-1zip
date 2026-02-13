@@ -13,8 +13,10 @@ import { db } from '@/lib/db';
 import { Product, ProductForm } from '@/types';
 import Modal from '@/components/ui/Modal';
 import BulkProductImport from '@/components/admin/BulkProductImport';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const ProductManagement: React.FC = () => {
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,14 +137,14 @@ const ProductManagement: React.FC = () => {
       fetchProducts();
     } catch (error) {
       console.error('Gabim gjatë ruajtjes së produktit:', error);
-      alert('Dështoi ruajtja e produktit');
+      alert(t.common.error);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm('Jeni të sigurt që dëshironi të fshini këtë produkt?')) return;
+    if (!confirm(t.productManagement.deleteConfirm)) return;
     try {
       const { error } = await db.deleteProduct(productId);
       if (error) throw new Error(error);
@@ -173,9 +175,9 @@ const ProductManagement: React.FC = () => {
 
   const getSeasonLabel = (season: string) => {
     switch (season) {
-      case 'winter': return 'Dimër';
-      case 'summer': return 'Verë';
-      case 'all-season': return 'Katër Stinë';
+      case 'winter': return t.productManagement.winter;
+      case 'summer': return t.productManagement.summer;
+      case 'all-season': return t.productManagement.allSeason;
       default: return season;
     }
   };
@@ -190,7 +192,6 @@ const ProductManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -198,7 +199,7 @@ const ProductManagement: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Kërko produkte..."
+            placeholder={t.productManagement.searchPlaceholder}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
           />
         </div>
@@ -208,32 +209,31 @@ const ProductManagement: React.FC = () => {
             className="flex items-center space-x-2 px-4 py-2.5 border border-orange-600 text-orange-600 rounded-lg hover:bg-orange-50 transition-colors font-medium"
           >
             <Upload className="w-5 h-5" />
-            <span>Import Masiv</span>
+            <span>{t.productManagement.bulkImport}</span>
           </button>
           <button
             onClick={() => handleOpenModal()}
             className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
           >
             <Plus className="w-5 h-5" />
-            <span>Shto Produkt</span>
+            <span>{t.productManagement.addProduct}</span>
           </button>
         </div>
       </div>
 
-      {/* Products Table */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-6 py-4 font-medium text-gray-700">Produkti</th>
-                <th className="text-left px-6 py-4 font-medium text-gray-700">Dimensionet</th>
-                <th className="text-center px-6 py-4 font-medium text-gray-700">Lloji</th>
-                <th className="text-center px-6 py-4 font-medium text-gray-700">Stina</th>
-                <th className="text-center px-6 py-4 font-medium text-gray-700">Stoku</th>
-                <th className="text-right px-6 py-4 font-medium text-gray-700">Çmimi</th>
-                <th className="text-center px-6 py-4 font-medium text-gray-700">Statusi</th>
-                <th className="text-right px-6 py-4 font-medium text-gray-700">Veprime</th>
+                <th className="text-left px-6 py-4 font-medium text-gray-700">{t.productManagement.product}</th>
+                <th className="text-left px-6 py-4 font-medium text-gray-700">{t.productManagement.dimensions}</th>
+                <th className="text-center px-6 py-4 font-medium text-gray-700">{t.productManagement.type}</th>
+                <th className="text-center px-6 py-4 font-medium text-gray-700">{t.productManagement.season}</th>
+                <th className="text-center px-6 py-4 font-medium text-gray-700">{t.productManagement.stock}</th>
+                <th className="text-right px-6 py-4 font-medium text-gray-700">{t.productManagement.price}</th>
+                <th className="text-center px-6 py-4 font-medium text-gray-700">{t.productManagement.status}</th>
+                <th className="text-right px-6 py-4 font-medium text-gray-700">{t.productManagement.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -286,7 +286,7 @@ const ProductManagement: React.FC = () => {
                         product.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}
                     >
-                      {product.is_active ? 'Aktiv' : 'Joaktiv'}
+                      {product.is_active ? t.productManagement.active : t.productManagement.inactive}
                     </button>
                   </td>
                   <td className="px-6 py-4">
@@ -294,14 +294,14 @@ const ProductManagement: React.FC = () => {
                       <button
                         onClick={() => handleOpenModal(product)}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="Ndrysho"
+                        title={t.productManagement.edit}
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteProduct(product.id)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Fshi"
+                        title={t.common.delete}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -315,22 +315,21 @@ const ProductManagement: React.FC = () => {
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Nuk u gjetën produkte</p>
+            <p className="text-gray-500">{t.productManagement.noProductsFound}</p>
           </div>
         )}
       </div>
 
-      {/* Add/Edit Product Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={editingProduct ? 'Ndrysho Produktin' : 'Shto Produkt të Ri'}
+        title={editingProduct ? t.productManagement.editProduct : t.productManagement.addNewProduct}
         size="xl"
       >
         <div className="p-6 space-y-4">
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Kodi i Produktit *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.productCode}</label>
               <input
                 type="text"
                 value={formData.product_code}
@@ -341,7 +340,7 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Marka *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.brand}</label>
               <input
                 type="text"
                 value={formData.brand}
@@ -352,7 +351,7 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Emri *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.name}</label>
               <input
                 type="text"
                 value={formData.name}
@@ -366,7 +365,7 @@ const ProductManagement: React.FC = () => {
 
           <div className="grid sm:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gjerësia</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.width}</label>
               <input
                 type="number"
                 value={formData.width || ''}
@@ -376,7 +375,7 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Raporti</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.aspectRatio}</label>
               <input
                 type="number"
                 value={formData.aspect_ratio || ''}
@@ -386,7 +385,7 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Diametri</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.diameter}</label>
               <input
                 type="number"
                 value={formData.rim_diameter || ''}
@@ -396,7 +395,7 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dimensionet *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.dimensions} *</label>
               <input
                 type="text"
                 value={formData.dimensions}
@@ -410,32 +409,32 @@ const ProductManagement: React.FC = () => {
 
           <div className="grid sm:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lloji i Gomës</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.tireType}</label>
               <select
                 value={formData.tire_type}
                 onChange={(e) => setFormData(prev => ({ ...prev, tire_type: e.target.value as any }))}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               >
-                <option value="car">Veturë Pasagjerësh</option>
-                <option value="suv">SUV / 4x4</option>
-                <option value="van">Furgon / Komercial</option>
-                <option value="truck">Kamion</option>
+                <option value="car">{t.productManagement.passengerCar}</option>
+                <option value="suv">{t.productManagement.suv4x4}</option>
+                <option value="van">{t.productManagement.vanCommercial}</option>
+                <option value="truck">{t.productManagement.truck}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stina</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.season}</label>
               <select
                 value={formData.season}
                 onChange={(e) => setFormData(prev => ({ ...prev, season: e.target.value as any }))}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               >
-                <option value="summer">Verë</option>
-                <option value="winter">Dimër</option>
-                <option value="all-season">Katër Stinë</option>
+                <option value="summer">{t.productManagement.summer}</option>
+                <option value="winter">{t.productManagement.winter}</option>
+                <option value="all-season">{t.productManagement.allSeason}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sasia në Stok *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.stockQuantity}</label>
               <input
                 type="number"
                 value={formData.stock_quantity}
@@ -446,7 +445,7 @@ const ProductManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Çmimi (€) *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.price} (€) *</label>
               <input
                 type="number"
                 step="0.01"
@@ -460,7 +459,7 @@ const ProductManagement: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">URL e Imazhit</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.imageUrl}</label>
             <input
               type="url"
               value={formData.image_url}
@@ -471,13 +470,12 @@ const ProductManagement: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Përshkrimi</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.description}</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
-              placeholder="Përshkrimi i produktit..."
             />
           </div>
 
@@ -489,7 +487,7 @@ const ProductManagement: React.FC = () => {
                 onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
                 className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
               />
-              <span className="text-sm font-medium text-gray-700">Produkt Aktiv</span>
+              <span className="text-sm font-medium text-gray-700">{t.productManagement.activeProduct}</span>
             </label>
           </div>
 
@@ -498,7 +496,7 @@ const ProductManagement: React.FC = () => {
               onClick={() => setModalOpen(false)}
               className="px-4 py-2.5 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
             >
-              Anulo
+              {t.productManagement.cancel}
             </button>
             <button
               onClick={handleSaveProduct}
@@ -506,17 +504,16 @@ const ProductManagement: React.FC = () => {
               className="flex items-center space-x-2 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors disabled:opacity-50"
             >
               {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-              <span>{editingProduct ? 'Përditëso Produktin' : 'Krijo Produktin'}</span>
+              <span>{editingProduct ? t.productManagement.updateProduct : t.productManagement.createProduct}</span>
             </button>
           </div>
         </div>
       </Modal>
 
-      {/* Bulk Import Modal */}
       <Modal
         isOpen={importModalOpen}
         onClose={() => setImportModalOpen(false)}
-        title="Import Masiv i Produkteve"
+        title={t.productManagement.bulkImport}
         size="xl"
       >
         <BulkProductImport

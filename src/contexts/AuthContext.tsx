@@ -4,6 +4,7 @@ import { User, CartItem, Product } from '@/types';
 
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void;
   isLoading: boolean;
   isAuthenticated: boolean;
   cart: CartItem[];
@@ -190,6 +191,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     <AuthContext.Provider
       value={{
         user,
+        setUser: (u: User | null) => {
+          setUser(u);
+          if (u) {
+            localStorage.setItem('lassa_user', JSON.stringify(u));
+          } else {
+            localStorage.removeItem('lassa_user');
+          }
+        },
         isLoading,
         isAuthenticated: !!user,
         cart,
