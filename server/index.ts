@@ -10,7 +10,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://localhost',
+    'capacitor://localhost',
+    'http://localhost',
+    'http://localhost:5000',
+    'https://business-orders-management-1-1-zip.replit.app',
+    'https://lassaks.online',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 app.use(express.json());
 
 // Serve static files in production
