@@ -21,6 +21,11 @@
     <div id="root"></div>
     <script>
       window.__LASSA_API_URL__ = '';
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        if (window.location.pathname === '/' || window.location.pathname === '') {
+          window.location.replace('/staff');
+        }
+      }
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
