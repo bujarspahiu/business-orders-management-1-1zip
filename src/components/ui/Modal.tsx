@@ -39,14 +39,14 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
       <div
         ref={modalRef}
-        className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
+        className={`relative bg-white rounded-xl shadow-2xl w-full ${sizeClasses[size]} max-h-[85dvh] overflow-hidden animate-in fade-in zoom-in-95 duration-200`}
       >
         {title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -59,7 +59,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
             </button>
           </div>
         )}
-        <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="overflow-y-auto max-h-[calc(85dvh-80px)]">
           {children}
         </div>
       </div>

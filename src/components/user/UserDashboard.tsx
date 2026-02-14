@@ -43,9 +43,14 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
   const [lastOrderNumber, setLastOrderNumber] = useState('');
   const [downloadingOrderId, setDownloadingOrderId] = useState<string | null>(null);
 
+  const mainContentRef = React.useRef<HTMLElement>(null);
+
   useEffect(() => {
     if (activeTab === 'orders') {
       fetchOrders();
+    }
+    if (mainContentRef.current) {
+      mainContentRef.current.scrollTo(0, 0);
     }
   }, [activeTab]);
 
@@ -155,9 +160,9 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 native-viewport">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-30">
+      <header className="bg-white shadow-sm sticky top-0 z-30 safe-area-top">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -249,7 +254,7 @@ const UserDashboard: React.FC<UserDashboardProps> = ({ onLogout }) => {
       </div>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main ref={mainContentRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 native-scrollable safe-area-bottom">
         {activeTab === 'products' && <ProductGrid />}
 
         {activeTab === 'orders' && (

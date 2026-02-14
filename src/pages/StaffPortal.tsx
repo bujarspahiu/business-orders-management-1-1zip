@@ -42,7 +42,7 @@ const StaffPortalContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center native-viewport">
         <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
       </div>
     );
@@ -56,8 +56,8 @@ const StaffPortalContent: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-4">
-      <div className="absolute top-4 left-4">
+    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center px-4 native-viewport safe-area-top safe-area-bottom">
+      <div className="absolute top-4 left-4 safe-area-top safe-area-left">
         <a
           href="/"
           className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm"
@@ -67,7 +67,7 @@ const StaffPortalContent: React.FC = () => {
         </a>
       </div>
 
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 safe-area-top safe-area-right">
         <button
           onClick={toggleLanguage}
           className="flex items-center space-x-1.5 px-3 py-2 rounded-lg bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm"

@@ -35,8 +35,8 @@ const MobileLoginScreen: React.FC<MobileLoginScreenProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center justify-center px-4">
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center justify-center px-4 native-viewport safe-area-top safe-area-bottom">
+      <div className="absolute top-4 right-4 safe-area-top safe-area-right">
         <button
           onClick={() => setLanguage(language === 'sq' ? 'en' : 'sq')}
           className="flex items-center space-x-1 px-3 py-1.5 rounded-full bg-white/10 text-white/80 hover:bg-white/20 transition-colors text-sm"

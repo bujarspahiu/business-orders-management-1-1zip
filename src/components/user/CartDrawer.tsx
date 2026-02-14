@@ -101,9 +101,9 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col safe-area-right">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 safe-area-top">
           <div className="flex items-center space-x-2">
             <ShoppingBag className="w-5 h-5 text-orange-600" />
             <h2 className="text-lg font-semibold text-gray-900">
@@ -209,7 +209,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, onCheckout }) 
 
         {/* Footer */}
         {cart.length > 0 && (
-          <div className="border-t border-gray-200 p-6 space-y-4">
+          <div className="border-t border-gray-200 p-6 space-y-4 safe-area-bottom">
             {/* Summary */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-gray-600">

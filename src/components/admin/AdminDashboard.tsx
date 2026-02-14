@@ -112,7 +112,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100 flex native-viewport">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div
@@ -122,10 +122,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900 transform transition-transform lg:transform-none ${
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-slate-900 transform transition-transform lg:transform-none safe-area-left ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full safe-area-top safe-area-bottom">
           {/* Logo */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800">
             <img
@@ -187,9 +187,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white shadow-sm sticky top-0 z-30">
+        <header className="bg-white shadow-sm sticky top-0 z-30 safe-area-top safe-area-right">
           <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
             <div className="flex items-center space-x-4">
               <button
@@ -220,7 +220,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto safe-area-bottom safe-area-right">
           {activeTab === 'dashboard' && (
             <div className="space-y-6">
               {/* Stats Grid */}
