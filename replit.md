@@ -68,6 +68,9 @@ The Express.js backend (`server/index.ts`) provides these endpoints:
 - `PUT /api/users/:id` - Update user
 - `DELETE /api/users/:id` - Delete user (admin)
 
+### File Upload
+- `POST /api/upload` - Upload product image (multipart form, field: 'image', max 5MB)
+
 ### Products
 - `GET /api/products` - Get all products
 - `POST /api/products` - Create product (admin)
@@ -175,3 +178,7 @@ The mobile app is built with Capacitor v6, which wraps the web app as native And
 - Added Capacitor v6 for native mobile app builds
 - Mobile app loads directly from published server URL (no local assets)
 - Web assets synced to both Android and iOS native projects
+- **Product image upload**: Added multer-based image upload endpoint (`POST /api/upload`), images stored in `uploads/` directory and served statically. Product form now supports uploading images directly with preview, plus fallback URL input
+- **Reports custom date range**: Both Admin and User Reports now support a "Custom" period with start/end date pickers alongside Daily/Weekly/Monthly/Yearly
+- **Reports generate button**: Reports no longer auto-load; users must click "Generate Report" to view data, then can export as PDF
+- **PDF mobile fix**: savePDFMobile now uses Web Share API for Android/iOS, allowing users to save/share PDFs via native share sheet

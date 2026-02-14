@@ -219,6 +219,10 @@ interface Translations {
     tireType: string;
     stockQuantity: string;
     imageUrl: string;
+    productImage: string;
+    uploadImage: string;
+    uploading: string;
+    orImageUrl: string;
     description: string;
     activeProduct: string;
     cancel: string;
@@ -444,6 +448,15 @@ interface Translations {
     noData: string;
     exportPDF: string;
     generatedOn: string;
+    custom: string;
+    generateReport: string;
+    startDate: string;
+    endDate: string;
+    selectPeriod: string;
+    purchaseReports: string;
+    downloadReport: string;
+    avgOrderValue: string;
+    total: string;
   };
   // StaffPortal
   staffPortal: {
@@ -705,6 +718,10 @@ const translations: Record<Language, Translations> = {
       tireType: 'Lloji i Gomës',
       stockQuantity: 'Sasia në Stok *',
       imageUrl: 'URL e Imazhit',
+      productImage: 'Foto e Produktit',
+      uploadImage: 'Ngarko Foto',
+      uploading: 'Duke ngarkuar...',
+      orImageUrl: 'Ose vendos URL të fotos',
       description: 'Përshkrimi',
       activeProduct: 'Produkt Aktiv',
       cancel: 'Anulo',
@@ -935,6 +952,15 @@ const translations: Record<Language, Translations> = {
       noData: 'Nuk ka të dhëna për këtë periudhë',
       exportPDF: 'Eksporto PDF',
       generatedOn: 'Gjeneruar më',
+      custom: 'Personalizuar',
+      generateReport: 'Gjenero Raportin',
+      startDate: 'Data e Fillimit',
+      endDate: 'Data e Mbarimit',
+      selectPeriod: 'Zgjidhni periudhën dhe gjeneroni raportin',
+      purchaseReports: 'Raportet e Blerjeve',
+      downloadReport: 'Shkarko Raportin',
+      avgOrderValue: 'Vlera Mesatare',
+      total: 'Totali',
     },
     staffPortal: {
       title: 'Portali i Stafit',
@@ -1178,6 +1204,10 @@ const translations: Record<Language, Translations> = {
       tireType: 'Tire Type',
       stockQuantity: 'Stock Quantity *',
       imageUrl: 'Image URL',
+      productImage: 'Product Image',
+      uploadImage: 'Upload Image',
+      uploading: 'Uploading...',
+      orImageUrl: 'Or paste image URL',
       description: 'Description',
       activeProduct: 'Active Product',
       cancel: 'Cancel',
@@ -1408,6 +1438,15 @@ const translations: Record<Language, Translations> = {
       noData: 'No data for this period',
       exportPDF: 'Export PDF',
       generatedOn: 'Generated on',
+      custom: 'Custom',
+      generateReport: 'Generate Report',
+      startDate: 'Start Date',
+      endDate: 'End Date',
+      selectPeriod: 'Select a period and generate a report',
+      purchaseReports: 'Purchase Reports',
+      downloadReport: 'Download Report',
+      avgOrderValue: 'Avg Order Value',
+      total: 'Total',
     },
     staffPortal: {
       title: 'Staff Portal',

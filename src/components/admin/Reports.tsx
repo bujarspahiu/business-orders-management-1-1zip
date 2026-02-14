@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   BarChart3, 
   Calendar, 
@@ -34,7 +34,7 @@ declare module 'jspdf' {
   }
 }
 
-type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
+type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 
 interface ReportsProps {
   userId?: string;
@@ -56,6 +56,9 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [customEndDate, setCustomEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
 
   const getDateRange = (date: Date, p: Period): { start: Date; end: Date } => {
     switch (p) {
@@ -67,6 +70,11 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
         return { start: startOfMonth(date), end: endOfMonth(date) };
       case 'yearly':
         return { start: startOfYear(date), end: endOfYear(date) };
+      case 'custom':
+        return {
+          start: startOfDay(new Date(customStartDate)),
+          end: endOfDay(new Date(customEndDate))
+        };
     }
   };
 
@@ -75,11 +83,14 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
       const fn = direction === 'prev' 
         ? { daily: subDays, weekly: subWeeks, monthly: subMonths, yearly: subYears }
         : { daily: addDays, weekly: addWeeks, monthly: addMonths, yearly: addYears };
-      return fn[period](prev, 1);
+      return fn[period as Exclude<Period, 'custom'>](prev, 1);
     });
   };
 
   const getPeriodLabel = () => {
+    if (period === 'custom') {
+      return `${format(new Date(customStartDate), 'dd MMM yyyy')} - ${format(new Date(customEndDate), 'dd MMM yyyy')}`;
+    }
     const { start, end } = getDateRange(currentDate, period);
     switch (period) {
       case 'daily':
@@ -93,10 +104,6 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
     }
   };
 
-  useEffect(() => {
-    fetchReport();
-  }, [period, currentDate, userId]);
-
   const fetchReport = async () => {
     setIsLoading(true);
     try {
@@ -109,9 +116,11 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
 
       if (error) throw new Error(error);
       setReportData(data);
+      setReportGenerated(true);
     } catch (error) {
       console.error('Error fetching report:', error);
       setReportData({ orders: [], summary: { totalOrders: 0, totalItems: 0, totalRevenue: 0 } });
+      setReportGenerated(true);
     } finally {
       setIsLoading(false);
     }
@@ -246,6 +255,7 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
     { key: 'weekly', label: t.reports.weekly },
     { key: 'monthly', label: t.reports.monthly },
     { key: 'yearly', label: t.reports.yearly },
+    { key: 'custom', label: t.reports.custom || 'Custom' },
   ];
 
   return (
@@ -257,23 +267,25 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
           </h2>
           <p className="text-sm text-gray-500 mt-1">{t.reports.description}</p>
         </div>
-        <button
-          onClick={exportPDF}
-          disabled={isExporting || !reportData || reportData.orders.length === 0}
-          className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isExporting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          <span>{t.reports.exportPDF}</span>
-        </button>
+        {reportGenerated && reportData && reportData.orders.length > 0 && (
+          <button
+            onClick={exportPDF}
+            disabled={isExporting}
+            className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            <span>{t.reports.exportPDF}</span>
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-gray-100 rounded-lg p-1 flex-wrap">
             {periodButtons.map(({ key, label }) => (
               <button
                 key={key}
@@ -289,24 +301,62 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
             ))}
           </div>
 
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigateDate('prev')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-600" />
-            </button>
-            <div className="flex items-center space-x-2 min-w-[200px] justify-center">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">{getPeriodLabel()}</span>
+          {period === 'custom' ? (
+            <div className="flex items-center space-x-3">
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-500 mb-1">{t.reports.startDate || 'Start Date'}</label>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-500 mb-1">{t.reports.endDate || 'End Date'}</label>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
             </div>
-            <button
-              onClick={() => navigateDate('next')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ChevronRight className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => navigateDate('prev')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div className="flex items-center space-x-2 min-w-[200px] justify-center">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-900">{getPeriodLabel()}</span>
+              </div>
+              <button
+                onClick={() => navigateDate('next')}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={fetchReport}
+            disabled={isLoading}
+            className="flex items-center space-x-2 px-6 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <BarChart3 className="w-4 h-4" />
+            )}
+            <span>{t.reports.generateReport || 'Generate Report'}</span>
+          </button>
         </div>
       </div>
 
@@ -314,7 +364,7 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-4 border-orange-600 border-t-transparent"></div>
         </div>
-      ) : reportData ? (
+      ) : reportGenerated && reportData ? (
         <>
           <div className="grid sm:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl shadow-sm p-6">
@@ -396,6 +446,11 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
             </div>
           </div>
         </>
+      ) : !reportGenerated ? (
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">{t.reports.selectPeriod || 'Select a period and generate a report'}</p>
+        </div>
       ) : null}
     </div>
   );

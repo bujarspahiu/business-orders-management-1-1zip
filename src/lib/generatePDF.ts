@@ -11,7 +11,7 @@ declare module 'jspdf' {
   }
 }
 
-export const savePDFMobile = (doc: jsPDF, fileName: string): void => {
+export const savePDFMobile = async (doc: jsPDF, fileName: string): Promise<void> => {
   const isNativeApp = typeof (window as any)?.Capacitor !== 'undefined' && (window as any)?.Capacitor?.isNativePlatform?.();
 
   if (!isNativeApp) {
@@ -19,21 +19,32 @@ export const savePDFMobile = (doc: jsPDF, fileName: string): void => {
     return;
   }
 
-  const pdfBase64 = doc.output('datauristring');
   const pdfBlob = doc.output('blob');
+  const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+    try {
+      await navigator.share({
+        files: [pdfFile],
+        title: fileName,
+      });
+      return;
+    } catch (e: any) {
+      if (e.name === 'AbortError') return;
+    }
+  }
+
   const blobUrl = URL.createObjectURL(pdfBlob);
 
   const existing = document.getElementById('pdf-viewer-overlay');
-  if (existing) {
-    existing.remove();
-  }
+  if (existing) existing.remove();
 
   const overlay = document.createElement('div');
   overlay.id = 'pdf-viewer-overlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#0f172a;display:flex;flex-direction:column;';
 
   const toolbar = document.createElement('div');
-  toolbar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1e293b;flex-shrink:0;safe-area-inset-top:env(safe-area-inset-top);padding-top:max(12px, env(safe-area-inset-top));';
+  toolbar.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#1e293b;flex-shrink:0;padding-top:max(12px, env(safe-area-inset-top));';
 
   const titleEl = document.createElement('span');
   titleEl.textContent = fileName;
@@ -42,16 +53,27 @@ export const savePDFMobile = (doc: jsPDF, fileName: string): void => {
   const btnGroup = document.createElement('div');
   btnGroup.style.cssText = 'display:flex;gap:8px;flex-shrink:0;';
 
-  const downloadBtn = document.createElement('a');
-  downloadBtn.href = pdfBase64;
-  downloadBtn.download = fileName;
-  downloadBtn.textContent = 'Save PDF';
-  downloadBtn.style.cssText = 'color:white;background:#ea580c;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;';
-  downloadBtn.onclick = () => {
-    const linkAlt = document.createElement('a');
-    linkAlt.href = blobUrl;
-    linkAlt.download = fileName;
-    linkAlt.click();
+  const shareBtn = document.createElement('button');
+  shareBtn.textContent = 'Share / Save';
+  shareBtn.style.cssText = 'color:white;background:#ea580c;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;border:none;cursor:pointer;';
+  shareBtn.onclick = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ files: [pdfFile], title: fileName });
+      } else {
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        link.click();
+      }
+    } catch (e: any) {
+      if (e.name !== 'AbortError') {
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        link.click();
+      }
+    }
   };
 
   const closeBtn = document.createElement('button');
@@ -62,48 +84,19 @@ export const savePDFMobile = (doc: jsPDF, fileName: string): void => {
     URL.revokeObjectURL(blobUrl);
   };
 
-  btnGroup.appendChild(downloadBtn);
+  btnGroup.appendChild(shareBtn);
   btnGroup.appendChild(closeBtn);
   toolbar.appendChild(titleEl);
   toolbar.appendChild(btnGroup);
 
   const contentArea = document.createElement('div');
-  contentArea.style.cssText = 'flex:1;overflow:auto;background:white;display:flex;flex-direction:column;';
-
-  const iframe = document.createElement('iframe');
-  iframe.src = blobUrl;
-  iframe.style.cssText = 'width:100%;flex:1;border:none;';
-
-  const fallbackMsg = document.createElement('div');
-  fallbackMsg.style.cssText = 'display:none;padding:40px 20px;text-align:center;color:#475569;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;';
-  fallbackMsg.innerHTML =
+  contentArea.style.cssText = 'flex:1;overflow:auto;background:white;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 20px;';
+  contentArea.innerHTML =
     `<div style="width:80px;height:80px;background:#f1f5f9;border-radius:16px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">` +
     `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>` +
-    `<p style="font-size:18px;font-weight:700;margin-bottom:8px;color:#1e293b;">PDF Generated</p>` +
-    `<p style="font-size:14px;color:#64748b;margin-bottom:24px;max-width:280px;">Your document "${fileName}" is ready. Tap the button above to save it to your device.</p>`;
+    `<p style="font-size:18px;font-weight:700;margin-bottom:8px;color:#1e293b;">PDF Ready</p>` +
+    `<p style="font-size:14px;color:#64748b;max-width:280px;text-align:center;">Tap "Share / Save" above to save or share your document.</p>`;
 
-  let iframeFailed = false;
-  iframe.onerror = () => {
-    iframeFailed = true;
-    iframe.style.display = 'none';
-    fallbackMsg.style.display = 'flex';
-  };
-
-  setTimeout(() => {
-    if (iframeFailed) return;
-    try {
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (iframeDoc && iframeDoc.body && iframeDoc.body.innerHTML.length < 10) {
-        iframe.style.display = 'none';
-        fallbackMsg.style.display = 'flex';
-      }
-    } catch (e) {
-      // cross-origin means content loaded (PDF viewer)
-    }
-  }, 1500);
-
-  contentArea.appendChild(iframe);
-  contentArea.appendChild(fallbackMsg);
   overlay.appendChild(toolbar);
   overlay.appendChild(contentArea);
   document.body.appendChild(overlay);

@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart3, Calendar, ChevronLeft, ChevronRight, Download, FileText, Package, DollarSign, ShoppingCart, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { BarChart3, Calendar, ChevronLeft, ChevronRight, Download, Package, DollarSign, ShoppingCart, TrendingUp, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  startOfDay, endOfDay,
+  startOfWeek, endOfWeek,
+  startOfMonth, endOfMonth,
+  startOfYear, endOfYear,
+  addDays, addWeeks, addMonths, addYears,
+  subDays, subWeeks, subMonths, subYears,
+  format
+} from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { savePDFMobile } from '@/lib/generatePDF';
@@ -15,7 +24,7 @@ declare module 'jspdf' {
   }
 }
 
-type Period = 'daily' | 'weekly' | 'monthly' | 'yearly';
+type Period = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
 
 interface ReportData {
   orders: any[];
@@ -35,68 +44,74 @@ const UserReports: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [reportGenerated, setReportGenerated] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  const [customEndDate, setCustomEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
 
-  useEffect(() => {
-    fetchReport();
-  }, [period, currentDate]);
+  const getDateRange = (date: Date, p: Period): { start: Date; end: Date } => {
+    switch (p) {
+      case 'daily':
+        return { start: startOfDay(date), end: endOfDay(date) };
+      case 'weekly':
+        return { start: startOfWeek(date, { weekStartsOn: 1 }), end: endOfWeek(date, { weekStartsOn: 1 }) };
+      case 'monthly':
+        return { start: startOfMonth(date), end: endOfMonth(date) };
+      case 'yearly':
+        return { start: startOfYear(date), end: endOfYear(date) };
+      case 'custom':
+        return {
+          start: startOfDay(new Date(customStartDate)),
+          end: endOfDay(new Date(customEndDate))
+        };
+    }
+  };
+
+  const navigatePeriod = (direction: 'prev' | 'next') => {
+    setCurrentDate(prev => {
+      const fn = direction === 'prev'
+        ? { daily: subDays, weekly: subWeeks, monthly: subMonths, yearly: subYears }
+        : { daily: addDays, weekly: addWeeks, monthly: addMonths, yearly: addYears };
+      return fn[period as Exclude<Period, 'custom'>](prev, 1);
+    });
+  };
+
+  const getPeriodLabel = () => {
+    if (period === 'custom') {
+      return `${format(new Date(customStartDate), 'dd MMM yyyy')} - ${format(new Date(customEndDate), 'dd MMM yyyy')}`;
+    }
+    const { start, end } = getDateRange(currentDate, period);
+    switch (period) {
+      case 'daily':
+        return format(start, 'dd MMMM yyyy');
+      case 'weekly':
+        return `${format(start, 'dd MMM')} - ${format(end, 'dd MMM yyyy')}`;
+      case 'monthly':
+        return format(start, 'MMMM yyyy');
+      case 'yearly':
+        return format(start, 'yyyy');
+    }
+  };
 
   const fetchReport = async () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      const { data, error } = await db.getReports({
-        userId: user.id,
-        period,
-        date: currentDate.toISOString(),
-      });
+      const { start, end } = getDateRange(currentDate, period);
+      const { data, error } = await db.getReports(
+        user.id,
+        start.toISOString(),
+        end.toISOString()
+      ) as { data: ReportData | null; error: string | null };
+
       if (error) throw new Error(error);
-      setReportData(data as ReportData);
+      setReportData(data);
+      setReportGenerated(true);
     } catch (error) {
       console.error('Error fetching report:', error);
+      setReportData({ orders: [], summary: { totalOrders: 0, totalItems: 0, totalRevenue: 0, periodStart: '', periodEnd: '' } });
+      setReportGenerated(true);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const navigatePeriod = (direction: 'prev' | 'next') => {
-    const newDate = new Date(currentDate);
-    switch (period) {
-      case 'daily':
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'weekly':
-        newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-        break;
-      case 'monthly':
-        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
-      case 'yearly':
-        newDate.setFullYear(newDate.getFullYear() + (direction === 'next' ? 1 : -1));
-        break;
-    }
-    setCurrentDate(newDate);
-  };
-
-  const getPeriodLabel = () => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-    switch (period) {
-      case 'daily':
-        return currentDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      case 'weekly': {
-        const day = currentDate.getDay();
-        const mondayOffset = day === 0 ? -6 : 1 - day;
-        const monday = new Date(currentDate);
-        monday.setDate(currentDate.getDate() + mondayOffset);
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        return `${shortMonths[monday.getMonth()]} ${monday.getDate()} - ${shortMonths[sunday.getMonth()]} ${sunday.getDate()}, ${sunday.getFullYear()}`;
-      }
-      case 'monthly':
-        return `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-      case 'yearly':
-        return `${currentDate.getFullYear()}`;
     }
   };
 
@@ -224,6 +239,7 @@ const UserReports: React.FC = () => {
     { key: 'weekly', label: t.reports.weekly },
     { key: 'monthly', label: t.reports.monthly },
     { key: 'yearly', label: t.reports.yearly },
+    { key: 'custom', label: t.reports.custom || 'Custom' },
   ];
 
   const statCards = [
@@ -239,14 +255,15 @@ const UserReports: React.FC = () => {
         <div>
           <h2 className="text-xl font-semibold text-gray-900">{t.reports.purchaseReports}</h2>
         </div>
-        <button
-          onClick={downloadPDF}
-          disabled={!reportData || reportData.orders.length === 0}
-          className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Download className="w-4 h-4" />
-          <span>{t.reports.downloadReport}</span>
-        </button>
+        {reportGenerated && reportData && reportData.orders.length > 0 && (
+          <button
+            onClick={downloadPDF}
+            className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium"
+          >
+            <Download className="w-4 h-4" />
+            <span>{t.reports.downloadReport}</span>
+          </button>
+        )}
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-4">
@@ -267,24 +284,62 @@ const UserReports: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigatePeriod('prev')}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center space-x-2 min-w-[180px] justify-center">
-              <Calendar className="w-4 h-4 text-gray-400" />
-              <span className="text-sm font-medium text-gray-900">{getPeriodLabel()}</span>
+          {period === 'custom' ? (
+            <div className="flex items-center space-x-3">
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-500 mb-1">{t.reports.startDate || 'Start Date'}</label>
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-500 mb-1">{t.reports.endDate || 'End Date'}</label>
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              </div>
             </div>
-            <button
-              onClick={() => navigatePeriod('next')}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => navigatePeriod('prev')}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <div className="flex items-center space-x-2 min-w-[180px] justify-center">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span className="text-sm font-medium text-gray-900">{getPeriodLabel()}</span>
+              </div>
+              <button
+                onClick={() => navigatePeriod('next')}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 flex justify-center">
+          <button
+            onClick={fetchReport}
+            disabled={isLoading}
+            className="flex items-center space-x-2 px-6 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <BarChart3 className="w-4 h-4" />
+            )}
+            <span>{t.reports.generateReport || 'Generate Report'}</span>
+          </button>
         </div>
       </div>
 
@@ -292,7 +347,7 @@ const UserReports: React.FC = () => {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-4 border-orange-600 border-t-transparent"></div>
         </div>
-      ) : (
+      ) : reportGenerated && reportData ? (
         <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {statCards.map((stat, index) => (
@@ -309,7 +364,7 @@ const UserReports: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            {reportData && reportData.orders.length > 0 ? (
+            {reportData.orders.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -348,7 +403,12 @@ const UserReports: React.FC = () => {
             )}
           </div>
         </>
-      )}
+      ) : !reportGenerated ? (
+        <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">{t.reports.selectPeriod || 'Select a period and generate a report'}</p>
+        </div>
+      ) : null}
     </div>
   );
 };

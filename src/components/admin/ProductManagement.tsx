@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Search, 
@@ -7,13 +7,19 @@ import {
   Loader2,
   Package,
   AlertTriangle,
-  Upload
+  Upload,
+  ImagePlus,
+  X
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { Product, ProductForm } from '@/types';
 import Modal from '@/components/ui/Modal';
 import BulkProductImport from '@/components/admin/BulkProductImport';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+const isNativeApp = typeof (window as any)?.Capacitor !== 'undefined' && (window as any)?.Capacitor?.isNativePlatform?.();
+const PRODUCTION_URL = ((window as any).__LASSA_API_URL__ || '').replace(/\/+$/, '');
+const UPLOAD_BASE = isNativeApp && PRODUCTION_URL ? PRODUCTION_URL : '';
 
 const ProductManagement: React.FC = () => {
   const { t } = useLanguage();
@@ -25,6 +31,8 @@ const ProductManagement: React.FC = () => {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<ProductForm>({
     product_code: '',
@@ -140,6 +148,28 @@ const ProductManagement: React.FC = () => {
       alert(t.common.error);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', file);
+      const uploadUrl = `${UPLOAD_BASE}/api/upload`;
+      const response = await fetch(uploadUrl, { method: 'POST', body: formDataUpload });
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+      const imageUrl = isNativeApp && PRODUCTION_URL ? `${PRODUCTION_URL}${result.data.url}` : result.data.url;
+      setFormData(prev => ({ ...prev, image_url: imageUrl }));
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert(t.common.error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -459,14 +489,58 @@ const ProductManagement: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.imageUrl}</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t.productManagement.productImage || 'Product Image'}</label>
             <input
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              placeholder="https://..."
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
             />
+            <div className="space-y-3">
+              {formData.image_url ? (
+                <div className="relative inline-block">
+                  <img
+                    src={formData.image_url}
+                    alt="Product"
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://d64gsuwffb70l.cloudfront.net/6970831999a5dc17b3f2cb41_1768982832385_02f594f4.jpg'; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : null}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="flex items-center space-x-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-400 hover:bg-orange-50 transition-colors text-sm"
+                >
+                  {isUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-orange-600" />
+                  ) : (
+                    <ImagePlus className="w-4 h-4 text-gray-500" />
+                  )}
+                  <span className="text-gray-600">{isUploading ? (t.productManagement.uploading || 'Uploading...') : (t.productManagement.uploadImage || 'Upload Image')}</span>
+                </button>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">{t.productManagement.orImageUrl || 'Or paste image URL'}</label>
+                <input
+                  type="url"
+                  value={formData.image_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                  placeholder="https://..."
+                />
+              </div>
+            </div>
           </div>
 
           <div>
