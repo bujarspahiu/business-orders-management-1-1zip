@@ -24,6 +24,7 @@ import {
 } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { savePDFMobile } from '@/lib/generatePDF';
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -232,7 +233,7 @@ const Reports: React.FC<ReportsProps> = ({ userId }) => {
 
       const periodSlug = getPeriodLabel().replace(/\s+/g, '-');
       const typeSlug = userId ? 'purchases' : 'sales';
-      doc.save(`Report-${typeSlug}-${periodSlug}.pdf`);
+      savePDFMobile(doc, `Report-${typeSlug}-${periodSlug}.pdf`);
     } catch (error) {
       console.error('Error exporting PDF:', error);
     } finally {

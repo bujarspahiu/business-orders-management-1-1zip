@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { savePDFMobile } from '@/lib/generatePDF';
 
 declare module 'jspdf' {
   interface jsPDF {
@@ -215,7 +216,7 @@ const UserReports: React.FC = () => {
     doc.setTextColor(...primaryColor);
     doc.text('www.lassatires.com', pageWidth - margin, footerY, { align: 'right' });
 
-    doc.save(`Purchase-Report-${getPeriodLabel().replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
+    savePDFMobile(doc, `Purchase-Report-${getPeriodLabel().replace(/[^a-zA-Z0-9]/g, '-')}.pdf`);
   };
 
   const periods: { key: Period; label: string }[] = [
