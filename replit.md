@@ -80,11 +80,18 @@ The Express.js backend (`server/index.ts`) provides these endpoints:
 - `POST /api/orders` - Create new order
 - `PUT /api/orders/:id` - Update order status (admin)
 
-### Notifications
-- `GET /api/notification-recipients` - Get notification recipients (admin)
-- `POST /api/notification-recipients` - Add recipient (admin)
-- `PUT /api/notification-recipients/:id` - Update recipient (admin)
-- `DELETE /api/notification-recipients/:id` - Remove recipient (admin)
+### Email Notification Recipients
+- `GET /api/notification_recipients` - Get notification recipients (admin)
+- `POST /api/notification_recipients` - Add recipient (admin)
+- `PATCH /api/notification_recipients/:id` - Update recipient (admin)
+- `DELETE /api/notification_recipients/:id` - Remove recipient (admin)
+
+### In-App Notifications
+- `GET /api/notifications` - Get all notifications (latest 50)
+- `GET /api/notifications/unread-count` - Get unread notification count
+- `PATCH /api/notifications/:id/read` - Mark notification as read
+- `PATCH /api/notifications/read-all` - Mark all notifications as read
+- `DELETE /api/notifications/:id` - Delete a notification
 
 ## Default Admin Account
 
@@ -157,6 +164,8 @@ The mobile app is built with Capacitor v6, which wraps the web app as native And
 
 ## Recent Changes
 
+- **In-app notification system**: Admin dashboard has a notification bell with unread badge, polls every 15 seconds for new notifications. Notifications are created automatically when orders are placed. Table: `app_notifications`
+- **Email notifications**: Gmail SMTP integration (titanshopservice@gmail.com) sends order notifications to recipients in `notification_recipients` table
 - **Separated business login from main website**: Main site (/) is now purely informational. Business login portal lives at /staff with its own standalone login page
 - Converted authentication from email-based to username-based login
 - Admin credentials: Username: Admin, Password: Admin
@@ -164,6 +173,5 @@ The mobile app is built with Capacitor v6, which wraps the web app as native And
 - Added Express.js backend server for API operations
 - Created custom database client (`src/lib/db.ts`) to replace Supabase client
 - Added Capacitor v6 for native mobile app builds
-- Updated MOBILE_BUILD_INSTRUCTIONS.md with comprehensive step-by-step guide
-- Created automated `scripts/prepare-mobile.sh` for mobile build preparation
+- Mobile app loads directly from published server URL (no local assets)
 - Web assets synced to both Android and iOS native projects

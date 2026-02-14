@@ -37,11 +37,20 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+const GMAIL_USER = process.env.GMAIL_USER || '';
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || '';
+
+if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+  console.warn('WARNING: GMAIL_USER or GMAIL_APP_PASSWORD not set. Email notifications will not work.');
+} else {
+  console.log(`Email notifications configured for: ${GMAIL_USER}`);
+}
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: GMAIL_USER,
+    pass: GMAIL_APP_PASSWORD,
   },
 });
 
@@ -95,15 +104,22 @@ async function sendOrderNotification(order: any, orderItems: any[], customer: an
       </div>
     `;
 
+    if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+      console.warn('Skipping email notification: Gmail credentials not configured');
+      return;
+    }
+
+    console.log(`Attempting to send email notification for order ${order.order_number} to: ${toEmails}`);
     await transporter.sendMail({
-      from: `"Lassa Tyres B2B" <${process.env.GMAIL_USER}>`,
+      from: `"Lassa Tyres B2B" <${GMAIL_USER}>`,
       to: toEmails,
       subject: `Porosi e Re #${order.order_number} - ${customer?.business_name || 'N/A'}`,
       html,
     });
-    console.log(`Email notification sent for order ${order.order_number} to ${toEmails}`);
-  } catch (error) {
-    console.error('Failed to send email notification:', error);
+    console.log(`Email notification sent successfully for order ${order.order_number} to ${toEmails}`);
+  } catch (error: any) {
+    console.error('Failed to send email notification:', error?.message || error);
+    console.error('Full error:', JSON.stringify(error, null, 2));
   }
 }
 
@@ -111,6 +127,21 @@ async function runMigrations() {
   try {
     await pool.query('ALTER TABLE users ALTER COLUMN email DROP NOT NULL');
   } catch (e) {
+  }
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_notifications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        type VARCHAR(50) NOT NULL DEFAULT 'order',
+        title VARCHAR(255) NOT NULL,
+        message TEXT,
+        order_id UUID REFERENCES orders(id),
+        is_read BOOLEAN DEFAULT false,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+  } catch (e) {
+    console.error('Failed to create app_notifications table:', e);
   }
 }
 
@@ -381,6 +412,16 @@ app.post('/api/orders', async (req, res) => {
     const customer = userResult.rows[0] || null;
     sendOrderNotification(order, orderItems, customer);
 
+    try {
+      const customerName = customer?.business_name || customer?.username || 'Unknown';
+      await pool.query(
+        `INSERT INTO app_notifications (type, title, message, order_id) VALUES ($1, $2, $3, $4)`,
+        ['order', `New Order #${order.order_number}`, `New order from ${customerName} - Total: €${parseFloat(order.total_amount).toFixed(2)}`, order.id]
+      );
+    } catch (notifErr) {
+      console.error('Failed to create in-app notification:', notifErr);
+    }
+
     res.json({ data: { ...order, items: orderItems }, error: null });
   } catch (error: any) {
     await client.query('ROLLBACK');
@@ -504,6 +545,54 @@ app.delete('/api/notification_recipients/:id', async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM notification_recipients WHERE id = $1', [id]);
+    res.json({ data: { success: true }, error: null });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
+// In-app notifications endpoints
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM app_notifications ORDER BY created_at DESC LIMIT 50');
+    res.json({ data: result.rows, error: null });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
+app.get('/api/notifications/unread-count', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT COUNT(*) as count FROM app_notifications WHERE is_read = false');
+    res.json({ data: { count: parseInt(result.rows[0].count) }, error: null });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
+app.patch('/api/notifications/:id/read', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('UPDATE app_notifications SET is_read = true WHERE id = $1', [id]);
+    res.json({ data: { success: true }, error: null });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
+app.patch('/api/notifications/read-all', async (req, res) => {
+  try {
+    await pool.query('UPDATE app_notifications SET is_read = true WHERE is_read = false');
+    res.json({ data: { success: true }, error: null });
+  } catch (error: any) {
+    res.json({ data: null, error: error.message });
+  }
+});
+
+app.delete('/api/notifications/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM app_notifications WHERE id = $1', [id]);
     res.json({ data: { success: true }, error: null });
   } catch (error: any) {
     res.json({ data: null, error: error.message });

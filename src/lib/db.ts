@@ -158,6 +158,26 @@ class DatabaseClient {
       method: 'DELETE',
     });
   }
+
+  async getNotifications() {
+    return this.request('/notifications');
+  }
+
+  async getUnreadNotificationCount() {
+    return this.request<{ count: number }>('/notifications/unread-count');
+  }
+
+  async markNotificationRead(id: string) {
+    return this.request(`/notifications/${id}/read`, { method: 'PATCH' });
+  }
+
+  async markAllNotificationsRead() {
+    return this.request('/notifications/read-all', { method: 'PATCH' });
+  }
+
+  async deleteNotification(id: string) {
+    return this.request(`/notifications/${id}`, { method: 'DELETE' });
+  }
 }
 
 export const db = new DatabaseClient();

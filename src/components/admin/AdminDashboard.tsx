@@ -23,6 +23,7 @@ import OrderManagement from './OrderManagement';
 import NotificationSettings from './NotificationSettings';
 import Reports from './Reports';
 import AdminSettings from './AdminSettings';
+import NotificationBell from './NotificationBell';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -213,6 +214,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <span>{stats.pendingOrders} {t.adminDashboard.pending}</span>
                 </div>
               )}
+              <NotificationBell onNavigateToOrders={() => setActiveTab('orders')} />
             </div>
           </div>
         </header>
